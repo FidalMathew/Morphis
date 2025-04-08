@@ -1,4 +1,20 @@
 import React, { useRef, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type SpecialNumber = {
   x: number;
@@ -26,6 +42,7 @@ export default function Game() {
   const [draggedPlayer, setDraggedPlayer] = useState<"red" | "blue" | null>(
     null
   );
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const dragRef = useRef(null);
 
@@ -144,48 +161,76 @@ export default function Game() {
   };
 
   const handlePlayerMove = (destinationNumber: number) => {
-    if (!validMoves.includes(destinationNumber)) return;
+    if (!validMoves.includes(destinationNumber) || isAnimating) return;
 
     const player = currentPlayer;
+    const currentNumber = playerNumbers[player];
     const newNumber = destinationNumber;
 
-    // Update player position
-    const newCoords = getCoordsFromNumber(newNumber as number);
+    // Start animation
+    setIsAnimating(true);
 
-    setPlayerPositions((prev) => ({
-      ...prev,
-      [player]: newCoords,
-    }));
+    // Create animation path
+    const steps = Math.abs(newNumber - currentNumber);
+    const direction = newNumber > currentNumber ? 1 : -1;
 
-    setPlayerNumbers((prev) => ({
-      ...prev,
-      [player]: newNumber,
-    }));
+    // Animate through each position
+    let currentStep = 0;
+    const animateStep = () => {
+      if (currentStep <= steps) {
+        const stepNumber = currentNumber + currentStep * direction;
+        if (stepNumber >= 1 && stepNumber <= 100) {
+          const stepCoords = getCoordsFromNumber(stepNumber);
+          setPlayerPositions((prev) => ({
+            ...prev,
+            [player]: stepCoords,
+          }));
+        }
+        currentStep++;
+        setTimeout(animateStep, 250); // 250ms per step
+      } else {
+        // Animation complete - update game state
+        finishMove();
+      }
+    };
 
-    // Clear valid moves
-    setValidMoves([]);
+    // Start animation
+    animateStep();
 
-    // Check if landed on a special box
-    const specialBox = specialBoxNumbers.find(
-      (box) => box.number === newNumber
-    );
-    if (specialBox) {
-      setShowTooltip(true);
-      setTooltipPosition({ number: newNumber });
-      setSelectedSpecialBox(specialBox);
-    }
+    // Function to handle game logic after animation completes
+    const finishMove = () => {
+      // Clear valid moves
+      setValidMoves([]);
 
-    // Check for win condition
-    if (newNumber === 100) {
-      setWinner(player);
-    }
+      // Update player number in state
+      setPlayerNumbers((prev) => ({
+        ...prev,
+        [player]: newNumber,
+      }));
 
-    // Switch player unless dice value is 6
-    if (diceValue !== 6) {
-      setCurrentPlayer((prev) => (prev === "red" ? "blue" : "red"));
-    }
+      // Check if landed on a special box
+      const specialBox = specialBoxNumbers.find(
+        (box) => box.number === newNumber
+      );
+      if (specialBox) {
+        setShowTooltip(true);
+        setTooltipPosition({ number: newNumber });
+        setSelectedSpecialBox(specialBox);
+      }
 
-    setWaitingForRoll(true);
+      // Check for win condition
+      if (newNumber === 100) {
+        setWinner(player);
+      }
+
+      // Switch player unless dice value is 6
+      if (diceValue !== 6) {
+        setCurrentPlayer((prev) => (prev === "red" ? "blue" : "red"));
+      }
+
+      setWaitingForRoll(true);
+      setIsAnimating(false);
+    };
   };
 
   const handleDragStart = (
@@ -259,7 +304,12 @@ export default function Game() {
   const applySpecialEffect = () => {
     if (!selectedSpecialBox) return;
 
-    const player = currentPlayer;
+    // Use the player who triggered the special box
+    const player =
+      selectedSpecialBox.effect === "good" ||
+      selectedSpecialBox.effect === "bad"
+        ? currentPlayer
+        : currentPlayer;
     const currentNumber = playerNumbers[player];
     let newNumber;
 
@@ -299,19 +349,19 @@ export default function Game() {
     }
   };
   return (
-    <div className="flex flex-col items-center justify-center p-4 max-w-4xl mx-auto">
+    <div className="flex flex-col items-center p-4 max-w-4xl mx-auto h-screen">
       <h1 className="text-2xl font-bold mb-4">
         Snakes & Ladders Style Board Game
       </h1>
 
       <div className="mb-4 flex flex-wrap gap-4">
         {!gameStarted ? (
-          <button
+          <Button
             onClick={startGame}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
             Start Game
-          </button>
+          </Button>
         ) : (
           <>
             <div className="px-4 py-2 bg-gray-100 rounded flex items-center gap-2">
@@ -331,7 +381,7 @@ export default function Game() {
               <span>Blue: {playerNumbers.blue}</span>
             </div>
 
-            <button
+            <Button
               onClick={rollDice}
               disabled={!waitingForRoll || winner !== null}
               className={`px-4 py-2 ${
@@ -341,7 +391,7 @@ export default function Game() {
               } text-white rounded`}
             >
               Roll Dice
-            </button>
+            </Button>
 
             {diceValue && (
               <div className="px-4 py-2 bg-gray-100 rounded">
@@ -364,16 +414,16 @@ export default function Game() {
           <p className="text-lg font-bold">
             {winner === "red" ? "Pink" : "Blue"} player wins!
           </p>
-          <button
+          <Button
             onClick={startGame}
             className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
             Play Again
-          </button>
+          </Button>
         </div>
       )}
 
-      <div className="border-4 border-gray-800 grid grid-cols-10">
+      <div className="border-4 border-cyan-600 grid grid-cols-10 place-items-center aspect-square h-full">
         {[...Array(10)].map((_, x) =>
           [...Array(10)].map((_, y) => {
             const number = getNumberFromCoords(x, y);
@@ -400,59 +450,85 @@ export default function Game() {
             return (
               <div
                 key={`${x}-${y}`}
-                className={`relative w-12 h-12 border border-gray-400 ${
+                className={`relative w-full h-full ${
                   playerPositions.red.x === playerPositions.blue.x &&
                   playerPositions.red.y === playerPositions.blue.y
                     ? ""
                     : "flex items-center justify-center"
                 }
-                  ${isEnd ? "bg-yellow-100" : ""}
-                  ${isStart ? "bg-green-100" : ""}
-                  ${isSpecialBox ? "bg-purple-50" : ""}
-                  ${
-                    isValidMove
-                      ? "bg-yellow-200 border-2 border-yellow-500 cursor-pointer"
-                      : ""
-                  }`}
+                ${isSpecialBox ? "bg-purple-200" : ""}
+                ${!isSpecialBox && isEnd ? "bg-yellow-100" : ""}
+                ${!isSpecialBox && isStart ? "bg-green-100" : ""}
+                ${!isSpecialBox && (x + y) % 2 === 0 ? "bg-white" : ""}
+                ${!isSpecialBox && (x + y) % 2 !== 0 ? "bg-orange-200" : ""}
+                ${
+                  isValidMove
+                    ? "z-[100] border-2 border-black cursor-pointer"
+                    : ""
+                }
+              `}
                 onDragOver={(e) => handleDragOver(e, number)}
                 onDrop={(e) => handleDrop(e, number)}
                 onTouchEnd={(e) => handleTouchEnd(e, number)}
-                onClick={() => handleDestinationClick(number)}
+                onClick={() => {
+                  handleDestinationClick(number);
+                }}
               >
-                <div className="absolute top-0 left-0 text-xs text-gray-700 p-1 font-bold">
+                <div className="grid place-content-center h-full w-full text-lg font-semibold text-gray-700 p-1">
                   {/* {x}, {y} */}
                   {number}
                 </div>
 
                 {redPlayerHere && (
                   <div
-                    className={`w-6 h-6 rounded-full bg-red-300 z-10 
-                      ${
-                        currentPlayer === "red" && validMoves.length > 0
-                          ? "cursor-move"
-                          : ""
-                      }`}
-                    draggable={currentPlayer === "red" && validMoves.length > 0}
-                    onDragStart={(e) => handleDragStart(e, "red")}
-                    onTouchStart={() => handleTouchStart("red")}
+                    className={`w-6 h-6 rounded-full bg-red-300 z-10 absolute transition-all duration-250 ease-in-out ${
+                      redPlayerHere && bluePlayerHere
+                        ? "top-0 left-0"
+                        : "top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                    } ${
+                      currentPlayer === "red" &&
+                      validMoves.length > 0 &&
+                      !isAnimating
+                        ? "cursor-move"
+                        : ""
+                    }`}
+                    draggable={
+                      currentPlayer === "red" &&
+                      validMoves.length > 0 &&
+                      !isAnimating
+                    }
+                    onDragStart={(e) =>
+                      !isAnimating && handleDragStart(e, "red")
+                    }
+                    onTouchStart={() => !isAnimating && handleTouchStart("red")}
                     ref={currentPlayer === "red" ? dragRef : null}
                   ></div>
                 )}
 
                 {bluePlayerHere && (
                   <div
-                    className={`w-6 h-6 rounded-full bg-blue-300 z-10 
-                      ${redPlayerHere ? "ml-4" : ""} 
-                      ${
-                        currentPlayer === "blue" && validMoves.length > 0
-                          ? "cursor-move"
-                          : ""
-                      }`}
+                    className={`w-6 h-6 rounded-full bg-blue-300 z-10 absolute transition-all duration-250 ease-in-out ${
+                      redPlayerHere && bluePlayerHere
+                        ? "top-1/2 right-0"
+                        : "top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                    } ${
+                      currentPlayer === "blue" &&
+                      validMoves.length > 0 &&
+                      !isAnimating
+                        ? "cursor-move"
+                        : ""
+                    }`}
                     draggable={
-                      currentPlayer === "blue" && validMoves.length > 0
+                      currentPlayer === "blue" &&
+                      validMoves.length > 0 &&
+                      !isAnimating
                     }
-                    onDragStart={(e) => handleDragStart(e, "blue")}
-                    onTouchStart={() => handleTouchStart("blue")}
+                    onDragStart={(e) =>
+                      !isAnimating && handleDragStart(e, "blue")
+                    }
+                    onTouchStart={() =>
+                      !isAnimating && handleTouchStart("blue")
+                    }
                     ref={currentPlayer === "blue" ? dragRef : null}
                   ></div>
                 )}
@@ -460,7 +536,7 @@ export default function Game() {
                 {showTooltipHere && (
                   <div
                     className="absolute z-20 bg-white border border-gray-300 rounded p-2 shadow-lg cursor-pointer"
-                    onClick={handleTooltipClick}
+                    onClick={() => handleTooltipClick()}
                   >
                     Click to see what happens
                   </div>
@@ -471,7 +547,7 @@ export default function Game() {
         )}
       </div>
 
-      <div className="mt-4 text-sm text-gray-600">
+      {/* <div className="mt-4 text-sm text-gray-600">
         <p>Rules:</p>
         <ul className="list-disc pl-5">
           <li>Roll the dice and drag your piece to the destination.</li>
@@ -479,12 +555,16 @@ export default function Game() {
           <li>First player to reach square 100 wins.</li>
           <li>Purple squares are special spaces with effects.</li>
         </ul>
-      </div>
+      </div> */}
 
       {showModal && selectedSpecialBox && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg max-w-md">
-            <h2 className="text-xl font-bold mb-2">Special Space!</h2>
+        <Dialog onOpenChange={setShowModal} open={showModal}>
+          <DialogContent className="bg-white">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold mb-2">
+                Special Space!
+              </DialogTitle>
+            </DialogHeader>
             <p className="mb-4">
               You landed on a{" "}
               {selectedSpecialBox.effect === "good" ? "good" : "bad"} space!
@@ -493,13 +573,13 @@ export default function Game() {
                 : " Move back 5 spaces."}
             </p>
             <div className="flex justify-end gap-2">
-              <button
+              <Button
                 onClick={closeModal}
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={applySpecialEffect}
                 className={`px-4 py-2 text-white rounded ${
                   selectedSpecialBox.effect === "good"
@@ -508,10 +588,10 @@ export default function Game() {
                 }`}
               >
                 Apply Effect
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
