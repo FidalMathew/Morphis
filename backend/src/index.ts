@@ -69,7 +69,7 @@ io.on("connection", (socket) => {
         lobbies[code] = lobby;
         socket.join(code);
 
-        socket.broadcast.emit("lobbyCreated", { code, player });
+        socket.emit("lobbyCreated", { code, player });
         console.log(`Lobby ${code} created by ${name}`);
     });
 
@@ -89,6 +89,8 @@ io.on("connection", (socket) => {
         const player: Player = { id: socket.id, name, position: 0 };
         lobby.players.push(player);
         socket.join(code);
+
+        console.log(`Player ${name} joined lobby ${code}`);
 
         io.to(code).emit("lobbyJoined", { players: lobby.players });
 

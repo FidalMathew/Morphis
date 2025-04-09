@@ -5,8 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import socket from "@/socket";
 import React, { useEffect, useRef, useState } from "react";
-import io from "socket.io-client";
 
 type SpecialNumber = {
   x: number;
@@ -17,7 +17,8 @@ type SpecialNumber = {
 
 export default function Home() {
   // Socket connection
-  const socket = io("http://localhost:8000");
+
+  const [joiningCode, setJoiningCode] = useState("");
 
   const [lobbyCode, setLobbyCode] = useState("");
   const [name, setName] = useState("");
@@ -49,6 +50,8 @@ export default function Home() {
   const dragRef = useRef(null);
 
   useEffect(() => {
+    console.log("Lobby Code", lobbyCode);
+
     socket.onAny((event, ...args) => {
       console.log(`🔍 Received event: ${event}`, args);
     });
@@ -67,9 +70,10 @@ export default function Home() {
       setPlayers([player]);
     });
 
-    // socket.on("lobbyJoined", ({ players }) => {
-    //   setPlayers(players);
-    // });
+    socket.on("lobbyJoined", ({ players }) => {
+      setPlayers(players);
+      console.log("Lobby joined:", players);
+    });
 
     // socket.on("gameStart", ({ turn, players }) => {
     //   setGameStarted(true);
@@ -444,15 +448,15 @@ export default function Home() {
         <p className="mt-4">Or join an existing room:</p>
         <input
           type="text"
-          value={lobbyCode}
-          onChange={(e) => setLobbyCode(e.target.value)}
+          value={joiningCode}
+          onChange={(e) => setJoiningCode(e.target.value)}
           placeholder="Enter room code"
           className="px-4 py-2 border border-gray-300 rounded mb-4"
         />
         <Button
           onClick={() => {
             if (!name.trim()) return alert("Enter a name");
-            socket.emit("joinLobby", { code: lobbyCode, name });
+            socket.emit("joinLobby", { code: joiningCode, name });
           }}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
