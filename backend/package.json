@@ -27,6 +27,7 @@
     "node-cron": "^3.0.3",
     "openai": "^4.73.1",
     "pinata-web3": "^0.5.4",
+    "socket.io": "^4.8.1",
     "starknet": "^6.23.1",
     "uuid": "^11.0.5",
     "viem": "^2.22.21"

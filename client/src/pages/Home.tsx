@@ -5,7 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import io from "socket.io-client";
 
 type SpecialNumber = {
   x: number;
@@ -15,6 +16,16 @@ type SpecialNumber = {
 };
 
 export default function Home() {
+  // Socket connection
+  const socket = io("http://localhost:8000");
+
+  const [lobbyCode, setLobbyCode] = useState("");
+  const [name, setName] = useState("");
+  const [yourId, setYourId] = useState("");
+  const [players, setPlayers] = useState([] as any[]);
+  const [yourTurn, setYourTurn] = useState(false);
+  const [rollResult, setRollResult] = useState<number | null>(null);
+
   const [currentPlayer, setCurrentPlayer] = useState<"red" | "blue">("red");
   const [diceValue, setDiceValue] = useState<number | null>(null);
   const [winner, setWinner] = useState<"red" | "blue" | null>(null);
@@ -36,6 +47,82 @@ export default function Home() {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const dragRef = useRef(null);
+
+  useEffect(() => {
+    socket.onAny((event, ...args) => {
+      console.log(`🔍 Received event: ${event}`, args);
+    });
+
+    socket.on("connect", () => {
+      console.log("✅ Socket connected --> :", socket.id);
+    });
+
+    console.log("Socket connected?", socket.connected);
+    console.log("Socket ID:", socket.id);
+
+    socket.on("lobbyCreated", ({ code, player }) => {
+      setLobbyCode(code);
+      console.log("Lobby created:", code);
+      setYourId(player.id);
+      setPlayers([player]);
+    });
+
+    // socket.on("lobbyJoined", ({ players }) => {
+    //   setPlayers(players);
+    // });
+
+    // socket.on("gameStart", ({ turn, players }) => {
+    //   setGameStarted(true);
+    //   setPlayers(players);
+    //   setYourTurn(turn === socket.id);
+    // });
+
+    // socket.on("diceRolled", ({ playerId, roll, position }) => {
+    //   setPlayers((prev) =>
+    //     prev.map((p) => (p.id === playerId ? { ...p, position } : p))
+    //   );
+    //   setRollResult(roll);
+    // });
+
+    // socket.on("nextTurn", ({ turn }) => {
+    //   setYourTurn(turn === socket.id);
+    // });
+
+    // socket.on("gameOver", ({ winner }) => {
+    //   setWinner(winner);
+    //   setGameStarted(false);
+    // });
+
+    // socket.on("playerLeft", () => {
+    //   alert("Opponent left. Game over.");
+    //   // reset();
+    // });
+
+    // socket.on("error", (msg) => alert(msg));
+
+    // return () => {
+    //   socket.off("lobbyCreated");
+    //   socket.off("connect");
+    // };
+  }, []);
+
+  const createLobby = () => {
+    if (!name.trim()) return alert("Enter a name");
+
+    if (!socket.connected) {
+      socket.connect();
+
+      socket.once("connect", () => {
+        console.log("✅ Socket connected:", socket.id);
+        socket.emit("createLobby", name);
+      });
+    } else {
+      console.log("✅ Already connected:", socket.id);
+      socket.emit("createLobby", name);
+    }
+  };
+
+  // Above is socket code
 
   const getNumberFromCoords = (x: number, y: number) => {
     const row = 9 - x;
@@ -332,6 +419,51 @@ export default function Home() {
 
     closeModal();
   };
+
+  // If Room Code is not Present, Show Create Room Button or Join Room Button
+
+  if (!lobbyCode) {
+    return (
+      <div className="flex flex-col items-center p-4 max-w-4xl mx-auto h-screen">
+        <h1 className="text-2xl font-bold mb-4">Board Game</h1>
+        <p className="mb-4">Enter your name to create or join a room:</p>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter your name"
+          className="px-4 py-2 border border-gray-300 rounded mb-4"
+        />
+        <Button
+          onClick={createLobby}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+        >
+          Create Room
+        </Button>
+
+        <p className="mt-4">Or join an existing room:</p>
+        <input
+          type="text"
+          value={lobbyCode}
+          onChange={(e) => setLobbyCode(e.target.value)}
+          placeholder="Enter room code"
+          className="px-4 py-2 border border-gray-300 rounded mb-4"
+        />
+        <Button
+          onClick={() => {
+            if (!name.trim()) return alert("Enter a name");
+            socket.emit("joinLobby", { code: lobbyCode, name });
+          }}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Join Room
+        </Button>
+      </div>
+    );
+  }
+  // If Room Code is Present, Show Game Board
+  // If Game is Started, Show Game Board
+  // If Game is Not Started, Show Waiting for Players
 
   // Handle direct click on a valid destination (alternative to drag & drop)
   const handleDestinationClick = (number: number) => {
