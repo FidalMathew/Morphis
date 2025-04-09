@@ -1,20 +1,11 @@
-import React, { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import React, { useRef, useState } from "react";
 
 type SpecialNumber = {
   x: number;
@@ -23,7 +14,7 @@ type SpecialNumber = {
   effect: string;
 };
 
-export default function Game() {
+export default function Home() {
   const [currentPlayer, setCurrentPlayer] = useState<"red" | "blue">("red");
   const [diceValue, setDiceValue] = useState<number | null>(null);
   const [winner, setWinner] = useState<"red" | "blue" | null>(null);
