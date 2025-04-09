@@ -92,7 +92,7 @@ io.on("connection", (socket) => {
 
         console.log(`Player ${name} joined lobby ${code}`);
 
-        io.to(code).emit("lobbyJoined", { players: lobby.players });
+        io.to(code).emit("lobbyJoined", { code:code, players: lobby.players });
 
         if (lobby.players.length === 2) {
             lobby.started = true;

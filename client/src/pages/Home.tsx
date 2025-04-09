@@ -5,7 +5,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import socket from "@/socket";
+// import socket from "@/socket";
+import { io } from "socket.io-client";
+
 import React, { useEffect, useRef, useState } from "react";
 
 type SpecialNumber = {
@@ -14,6 +16,8 @@ type SpecialNumber = {
   number: number;
   effect: string;
 };
+
+const socket = io("http://localhost:8000"); // Use your server URL
 
 export default function Home() {
   // Socket connection
@@ -70,44 +74,57 @@ export default function Home() {
       setPlayers([player]);
     });
 
-    socket.on("lobbyJoined", ({ players }) => {
+    socket.on("lobbyJoined", ({ code, players }) => {
       setPlayers(players);
+      setLobbyCode(code);
       console.log("Lobby joined:", players);
     });
 
-    // socket.on("gameStart", ({ turn, players }) => {
-    //   setGameStarted(true);
-    //   setPlayers(players);
-    //   setYourTurn(turn === socket.id);
-    // });
+    socket.on("gameStart", ({ turn, players }) => {
+      setGameStarted(true);
+      setPlayers(players);
+      setYourTurn(turn === socket.id);
 
-    // socket.on("diceRolled", ({ playerId, roll, position }) => {
-    //   setPlayers((prev) =>
-    //     prev.map((p) => (p.id === playerId ? { ...p, position } : p))
-    //   );
-    //   setRollResult(roll);
-    // });
+      console.log("Game started:", players);
+      console.log("Your turn:", turn === socket.id);
+    });
 
-    // socket.on("nextTurn", ({ turn }) => {
-    //   setYourTurn(turn === socket.id);
-    // });
+    socket.on("diceRolled", ({ playerId, roll, position }) => {
+      setPlayers((prev) =>
+        prev.map((p) => (p.id === playerId ? { ...p, position } : p))
+      );
 
-    // socket.on("gameOver", ({ winner }) => {
-    //   setWinner(winner);
-    //   setGameStarted(false);
-    // });
+      // Set valid move destination
+      setValidMoves([position]);
+    });
 
-    // socket.on("playerLeft", () => {
-    //   alert("Opponent left. Game over.");
-    //   // reset();
-    // });
+    socket.on("nextTurn", ({ turn }) => {
+      setYourTurn(turn === socket.id);
+      console.log("Your turn:", turn === socket.id);
+    });
 
-    // socket.on("error", (msg) => alert(msg));
+    socket.on("gameOver", ({ winner }) => {
+      setWinner(winner);
+      setGameStarted(false);
+    });
 
-    // return () => {
-    //   socket.off("lobbyCreated");
-    //   socket.off("connect");
-    // };
+    socket.on("playerLeft", () => {
+      alert("Opponent left. Game over.");
+      // reset();
+    });
+
+    socket.on("error", (msg) => alert(msg));
+
+    return () => {
+      socket.off("lobbyCreated");
+      socket.off("lobbyJoined");
+      socket.off("gameStart");
+      socket.off("diceRolled");
+      socket.off("nextTurn");
+      socket.off("gameOver");
+      socket.off("playerLeft");
+      socket.off("error");
+    };
   }, []);
 
   const createLobby = () => {
@@ -230,16 +247,20 @@ export default function Home() {
   const rollDice = () => {
     if (winner || !gameStarted || !waitingForRoll) return;
 
-    const value = Math.floor(Math.random() * 6) + 1;
-    setDiceValue(value as number);
-    setWaitingForRoll(false);
+    // const value = Math.floor(Math.random() * 6) + 1;
+    socket.emit("rollDice", {
+      code: lobbyCode,
+    });
 
-    // Calculate valid destination
-    const currentNumber = playerNumbers[currentPlayer];
-    const newNumber = Math.min(100, currentNumber + value);
+    // setDiceValue(value as number);
+    // setWaitingForRoll(false);
+
+    // // Calculate valid destination
+    // const currentNumber = playerNumbers[currentPlayer];
+    // const newNumber = Math.min(100, currentNumber + value);
 
     // Set valid move destination
-    setValidMoves([newNumber]);
+    // setValidMoves([newNumber]);
   };
 
   const handlePlayerMove = (destinationNumber: number) => {
@@ -510,9 +531,9 @@ export default function Home() {
 
             <Button
               onClick={rollDice}
-              disabled={!waitingForRoll || winner !== null}
+              disabled={!yourTurn || winner !== null}
               className={`px-4 py-2 ${
-                waitingForRoll && !winner
+                yourTurn && !winner
                   ? "bg-blue-500 hover:bg-blue-600"
                   : "bg-gray-300"
               } text-white rounded`}
