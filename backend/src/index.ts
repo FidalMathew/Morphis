@@ -5,6 +5,8 @@ import express, { Application } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
+import { readRandomness, rollDice } from "./contractCall";
+
 dotenv.config();
 
 const app: Application = express();
@@ -166,6 +168,34 @@ io.on("connection", (socket) => {
 
 app.get("/", (_, res) => {
     res.send("Snake and Ladders Socket Server with Lobbies 🐍🪜");
+});
+
+
+app.get("/readRandomness", async(_, res) => {
+    try {
+        
+        const value = await readRandomness();
+        console.log("Current value:", value.toString());
+        res.status(200).json({ value: value.toString() });
+        
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching randomness" });
+        console.error("Error fetching randomness:", error);
+    }
+});
+
+
+app.get("/rollDice", async(_, res) => {
+    try {
+
+        await rollDice();
+        console.log("Dice rolled");
+        res.status(200).json({ message: "Dice rolled" });
+        
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching randomness" });
+        console.error("Error fetching randomness:", error);
+    }
 });
 
 httpServer.listen(PORT, () => {
