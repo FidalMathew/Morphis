@@ -55,6 +55,9 @@ const specialBoxes: Record<number, string> = {
 }
 
 
+
+
+
 type Player = {
     id: string;
     name: string;
@@ -182,7 +185,8 @@ io.on("connection", (socket) => {
             prevPosition,
             roll,
             position: pos,
-            currentPlayer: lobby.players[playerIndex].color
+            currentPlayer: lobby.players[playerIndex].color,
+            players: lobby.players,
         });
 
         if (pos === 100) {
@@ -195,6 +199,10 @@ io.on("connection", (socket) => {
             });
         }
     });
+    
+
+    socket.on("usePowerUp", ({ code, powerUp }: { code: string, powerUp: string }) =>{})
+
 
     socket.on("disconnect", () => {
         for (const code in lobbies) {

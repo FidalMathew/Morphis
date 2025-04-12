@@ -10,16 +10,20 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dices } from "lucide-react";
+import { Dices, Loader2 } from "lucide-react";
 // import socket from "@/socket";
 import { io } from "socket.io-client";
 
 import { useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 type SpecialNumber = {
   x: number;
@@ -36,6 +40,8 @@ export default function Home() {
   const [joiningCode, setJoiningCode] = useState("");
 
   const [lobbyCode, setLobbyCode] = useState("");
+  const [gameJoinLoading, setGameJoinLoading] = useState(false);
+  const [lobbyJoined, setLobbyJoined] = useState(false);
   const [name, setName] = useState("");
   const [yourId, setYourId] = useState(null as string | null);
   const [players, setPlayers] = useState([] as any[]);
@@ -59,6 +65,7 @@ export default function Home() {
     useState<SpecialNumber | null>(null);
   const [waitingForRoll, setWaitingForRoll] = useState(true);
   const [validMoves, setValidMoves] = useState<number[]>([]);
+  const [modal, setModal] = useState(false);
 
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -81,6 +88,8 @@ export default function Home() {
     socket.on("lobbyCreated", ({ code, player }) => {
       setLobbyCode(code);
       console.log("Lobby created:", code);
+      setGameJoinLoading(true);
+      generateSpecialBoxes();
 
       console.log("Player created:", player, player.id, player.color);
       setYourId(player.id);
@@ -91,6 +100,8 @@ export default function Home() {
     socket.on("lobbyJoined", ({ code, player, players }) => {
       setPlayers(players);
       setLobbyCode(code);
+      setGameJoinLoading(false);
+      setLobbyJoined(true);
 
       console.log(" --- >", yourId, socket.id, myColor);
 
@@ -125,17 +136,19 @@ export default function Home() {
 
     socket.on(
       "diceRolled",
-      ({ prevPosition, roll, position, currentPlayer }) => {
+      ({ prevPosition, roll, position, currentPlayer, players }) => {
         console.log(
           "Dice rolled:",
           prevPosition,
           roll,
           position,
-          currentPlayer
+          currentPlayer,
+          players
         );
         // setPlayers((prev) =>
         //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
         // );
+        setPlayers(players);
         handlePlayerMove(position, prevPosition, currentPlayer);
         // setCurrentPlayer()
         // Set valid move destination
@@ -153,15 +166,20 @@ export default function Home() {
     socket.on("ModalOpen", ({ message }) => {
       console.log("ModalOpen: ", message);
       // alert(message);
+      setModal(true);
     });
 
     socket.on("gameOver", ({ winner }) => {
       setWinner(winner);
+
       setGameStarted(false);
     });
 
     socket.on("playerLeft", () => {
       alert("Opponent left. Game over.");
+      setLobbyCode("");
+      setGameStarted(false);
+      setLobbyJoined(false);
       // reset();
     });
 
@@ -286,23 +304,23 @@ export default function Home() {
     setSpecialBoxes(boxes);
   };
 
-  const startGame = () => {
-    setPlayerPositions({
-      red: getCoordsFromNumber(startingPositions.red),
-      blue: getCoordsFromNumber(startingPositions.blue),
-    });
-    setPlayerNumbers({
-      red: startingPositions.red,
-      blue: startingPositions.blue,
-    });
-    setCurrentPlayer("red");
-    setDiceValue(null);
-    setWinner(null);
-    setGameStarted(true);
-    setWaitingForRoll(true);
-    setValidMoves([]);
-    generateSpecialBoxes();
-  };
+  // const startGame = () => {
+  //   setPlayerPositions({
+  //     red: getCoordsFromNumber(startingPositions.red),
+  //     blue: getCoordsFromNumber(startingPositions.blue),
+  //   });
+  //   setPlayerNumbers({
+  //     red: startingPositions.red,
+  //     blue: startingPositions.blue,
+  //   });
+  //   setCurrentPlayer("red");
+  //   setDiceValue(null);
+  //   setWinner(null);
+  //   setGameStarted(true);
+  //   setWaitingForRoll(true);
+  //   setValidMoves([]);
+  //   generateSpecialBoxes();
+  // };
 
   const rollDice = () => {
     if (winner || !gameStarted || !waitingForRoll) return;
@@ -466,10 +484,10 @@ export default function Home() {
   // };
 
   // Handle click on tooltip
-  // const handleTooltipClick = () => {
-  //   setShowTooltip(false);
-  //   setShowModal(true);
-  // };
+  const handleTooltipClick = () => {
+    setShowTooltip(false);
+    setShowModal(true);
+  };
 
   // Handle modal close
   const closeModal = () => {
@@ -482,50 +500,50 @@ export default function Home() {
   };
 
   // Apply special box effect
-  // const applySpecialEffect = () => {
-  //   if (!selectedSpecialBox) return;
+  const applySpecialEffect = () => {
+    if (!selectedSpecialBox) return;
 
-  //   // Use the player who triggered the special box
-  //   const player =
-  //     selectedSpecialBox.effect === "good" ||
-  //     selectedSpecialBox.effect === "bad"
-  //       ? currentPlayer
-  //       : currentPlayer;
-  //   const currentNumber = playerNumbers[player];
-  //   let newNumber;
+    // Use the player who triggered the special box
+    const player =
+      selectedSpecialBox.effect === "good" ||
+      selectedSpecialBox.effect === "bad"
+        ? currentPlayer
+        : currentPlayer;
+    const currentNumber = playerNumbers[player];
+    let newNumber;
 
-  //   if (selectedSpecialBox.effect === "good") {
-  //     // Move forward 5 spaces
-  //     newNumber = Math.min(100, currentNumber + 5);
-  //   } else {
-  //     // Move back 5 spaces
-  //     newNumber = Math.max(1, currentNumber - 5);
-  //   }
+    if (selectedSpecialBox.effect === "good") {
+      // Move forward 5 spaces
+      newNumber = Math.min(100, currentNumber + 5);
+    } else {
+      // Move back 5 spaces
+      newNumber = Math.max(1, currentNumber - 5);
+    }
 
-  //   // Update position
-  //   const newCoords = getCoordsFromNumber(newNumber);
+    // Update position
+    const newCoords = getCoordsFromNumber(newNumber);
 
-  //   setPlayerPositions((prev) => ({
-  //     ...prev,
-  //     [player]: newCoords,
-  //   }));
+    setPlayerPositions((prev) => ({
+      ...prev,
+      [player]: newCoords,
+    }));
 
-  //   setPlayerNumbers((prev) => ({
-  //     ...prev,
-  //     [player]: newNumber,
-  //   }));
+    setPlayerNumbers((prev) => ({
+      ...prev,
+      [player]: newNumber,
+    }));
 
-  //   // Check for win condition
-  //   if (newNumber === 100) {
-  //     setWinner(player);
-  //   }
+    // Check for win condition
+    if (newNumber === 100) {
+      setWinner(player);
+    }
 
-  //   closeModal();
-  // };
+    closeModal();
+  };
 
   // If Room Code is not Present, Show Create Room Button or Join Room Button
 
-  if (!lobbyCode) {
+  if (!lobbyJoined) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4">
         <div className="w-full max-w-md">
@@ -580,12 +598,27 @@ export default function Home() {
                   <p className="text-sm text-slate-500 mb-4">
                     Create a new game room and invite friends to join you
                   </p>
-                  <Button
-                    onClick={createLobby}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    Create New Room
-                  </Button>
+                  {lobbyCode && (
+                    <p className="text-center font-semibold text-3xl py-5">
+                      {lobbyCode}
+                    </p>
+                  )}
+                  {gameJoinLoading ? (
+                    <Button
+                      onClick={createLobby}
+                      className="w-full bg-emerald-400"
+                    >
+                      <Loader2 className="animate-spin" />
+                      Please wait
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={createLobby}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      Create New Room
+                    </Button>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="join" className="mt-4">
@@ -619,72 +652,49 @@ export default function Home() {
                 </TabsContent>
               </Tabs>
             </CardContent>
-            <CardFooter className="flex justify-center border-t pt-4">
+            {/* <CardFooter className="flex justify-center border-t pt-4">
               <p className="text-xs text-slate-500">
                 © {new Date().getFullYear()} Morphis Game
               </p>
-            </CardFooter>
+            </CardFooter> */}
           </Card>
         </div>
       </div>
     );
   }
-  // If Room Code is Present, Show Game Board
-  // If Game is Started, Show Game Board
-  // If Game is Not Started, Show Waiting for Players
 
-  // Handle direct click on a valid destination (alternative to drag & drop)
-  // const handleDestinationClick = (number: number) => {
-  //   if (validMoves.includes(number)) {
-  //     handlePlayerMove(number);
-  //   }
-  // };
   return (
-    <div className="flex flex-col items-center p-4 max-w-4xl mx-auto h-screen">
-      <h1 className="text-2xl font-bold mb-4">
-        Snakes & Ladders Style Board Game
-      </h1>
-
-      <div className="mb-4 flex flex-wrap gap-4">
+    <div className="flex justify-center items-center p-4 h-screen w-full">
+      {/* <Button
+        // onClick={startGame}
+        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        Start Game
+      </Button> */}
+      <div></div>
+      <div className="mb-4 flex flex-col flex-wrap gap-4">
         {!gameStarted ? (
-          <Button
-            onClick={startGame}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            Start Game
-          </Button>
+          <></>
         ) : (
           <>
-            <div className="px-4 py-2 bg-gray-100 rounded flex items-center gap-2">
+            {/* <div className="px-4 py-2 bg-gray-100 rounded flex items-center gap-2">
               <div
                 className={`w-4 h-4 rounded-full ${
                   currentPlayer === "red" ? "bg-red-300" : "bg-blue-300"
                 }`}
               ></div>
               <span>Current: {currentPlayer === "red" ? "Pink" : "Blue"}</span>
-            </div>
+            </div> */}
 
-            <div className="px-4 py-2 bg-gray-100 rounded flex items-center gap-2">
+            {/* <div className="px-4 py-2 bg-gray-100 rounded flex items-center gap-2">
               <span>Pink: {playerNumbers.red}</span>
             </div>
 
             <div className="px-4 py-2 bg-gray-100 rounded flex items-center gap-2">
               <span>Blue: {playerNumbers.blue}</span>
-            </div>
+            </div> */}
 
-            <Button
-              onClick={rollDice}
-              disabled={!yourTurn || winner !== null}
-              className={`px-4 py-2 ${
-                yourTurn && !winner
-                  ? "bg-blue-500 hover:bg-blue-600"
-                  : "bg-gray-300"
-              } text-white rounded`}
-            >
-              Roll Dice
-            </Button>
-
-            <Button
+            {/* <Button
               onClick={() => {
                 console.log(
                   "dsaassddas ",
@@ -701,7 +711,7 @@ export default function Home() {
               Console
             </Button>
 
-            <Button onClick={handleMove}> Move</Button>
+            <Button onClick={handleMove}> Move</Button> */}
 
             {diceValue && (
               <div className="px-4 py-2 bg-gray-100 rounded">
@@ -725,7 +735,7 @@ export default function Home() {
             {winner === "red" ? "Pink" : "Blue"} player wins!
           </p>
           <Button
-            onClick={startGame}
+            // onClick={startGame}
             className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
             Play Again
@@ -733,7 +743,7 @@ export default function Home() {
         </div>
       )}
 
-      <div className="border-4 border-cyan-600 grid grid-cols-10 place-items-center aspect-square h-full">
+      <div className="border-4 border-orange-400 grid grid-cols-10 place-items-center aspect-square h-3/4">
         {[...Array(10)].map((_, x) =>
           [...Array(10)].map((_, y) => {
             const number = getNumberFromCoords(x, y);
@@ -843,18 +853,99 @@ export default function Home() {
                   ></div>
                 )}
 
-                {/* {showTooltipHere && (
+                {showTooltipHere && (
                   <div
                     className="absolute z-20 bg-white border border-gray-300 rounded p-2 shadow-lg cursor-pointer"
                     onClick={() => handleTooltipClick()}
                   >
                     Click to see what happens
                   </div>
-                )} */}
+                )}
               </div>
             );
           })
         )}
+      </div>
+
+      <div className="flex flex-col gap-4 p-4 w-[300px]">
+        {/* Advantages Section */}
+        <Card className="w-full bg-green-50 shadow-sm rounded-2xl">
+          <CardHeader className="border-b border-green-200">
+            <CardTitle className="text-2xl font-semibold text-center text-green-900">
+              🧩 Power Ups
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="pt-4">
+            <div className="grid gap-4">
+              {players
+                .find((player) => player.id === yourId)
+                .powerUps.map(
+                  (
+                    powerUp: { name: string; timeLeft: number },
+                    index: number
+                  ) => (
+                    <div
+                      key={index}
+                      className="flex flex-col justify-center items-center gap-2 bg-white rounded-xl p-3 border border-green-100"
+                    >
+                      <Badge
+                        variant="outline"
+                        className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs"
+                      >
+                        {powerUp.name}
+                      </Badge>
+                      <span className="text-sm text-gray-700">
+                        {powerUp.name}
+                      </span>
+                    </div>
+                  )
+                )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Current Player and Dice Section */}
+        <Card className="w-full max-w-lg bg-amber-100 shadow-md rounded-2xl">
+          <CardHeader className="pb-1 border-b border-amber-200">
+            <CardTitle className="text-2xl font-semibold text-center text-amber-900">
+              🎲 Current Turn
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-4">
+            <div className="text-center">
+              <p
+                className={`text-lg font-bold ${
+                  currentPlayer === "red" ? "text-red-700" : "text-blue-500"
+                }`}
+              >
+                {currentPlayer.slice(0, 1).toUpperCase() +
+                  currentPlayer.slice(1)}{" "}
+              </p>
+              <p className="text-sm text-gray-700">It's your turn to play</p>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <span className="text-sm font-medium text-amber-700 mb-1">
+                Dice Value
+              </span>
+              {/* {"renderDice(diceValue)"} */}
+              <Button
+                onClick={rollDice}
+                variant={"outline"}
+                disabled={!yourTurn || winner !== null}
+                className={`px-4 py-2 text-black ${
+                  yourTurn && !winner ? "" : "bg-gray-300 "
+                } text-white rounded`}
+                style={{
+                  color: "black",
+                }}
+              >
+                Roll Dice
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* <div className="mt-4 text-sm text-gray-600">
@@ -867,7 +958,7 @@ export default function Home() {
         </ul>
       </div> */}
 
-      {showModal && selectedSpecialBox && (
+      {/* {showModal && selectedSpecialBox && (
         <Dialog onOpenChange={setShowModal} open={showModal}>
           <DialogContent className="bg-white">
             <DialogHeader>
@@ -900,6 +991,20 @@ export default function Home() {
                 Apply Effect
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+      )} */}
+
+      {!isAnimating && !yourTurn && (
+        <Dialog open={modal} onOpenChange={setModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Are you absolutely sure?</DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. This will permanently delete your
+                account and remove your data from our servers.
+              </DialogDescription>
+            </DialogHeader>
           </DialogContent>
         </Dialog>
       )}
