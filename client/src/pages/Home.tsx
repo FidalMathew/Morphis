@@ -1,10 +1,21 @@
 import { Button } from "@/components/ui/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dices } from "lucide-react";
 // import socket from "@/socket";
 import { io } from "socket.io-client";
 
@@ -48,9 +59,7 @@ export default function Home() {
     useState<SpecialNumber | null>(null);
   const [waitingForRoll, setWaitingForRoll] = useState(true);
   const [validMoves, setValidMoves] = useState<number[]>([]);
-  const [draggedPlayer, setDraggedPlayer] = useState<"red" | "blue" | null>(
-    null
-  );
+
   const [isAnimating, setIsAnimating] = useState(false);
 
   const dragRef = useRef(null);
@@ -139,6 +148,11 @@ export default function Home() {
 
       setCurrentPlayer((prev) => (prev === "red" ? "blue" : "red"));
       console.log("Your turn:", turn === socket.id);
+    });
+
+    socket.on("ModalOpen", ({ message }) => {
+      console.log("ModalOpen: ", message);
+      // alert(message);
     });
 
     socket.on("gameOver", ({ winner }) => {
@@ -513,40 +527,105 @@ export default function Home() {
 
   if (!lobbyCode) {
     return (
-      <div className="flex flex-col items-center p-4 max-w-4xl mx-auto h-screen">
-        <h1 className="text-2xl font-bold mb-4">Board Game</h1>
-        <p className="mb-4">Enter your name to create or join a room:</p>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter your name"
-          className="px-4 py-2 border border-gray-300 rounded mb-4"
-        />
-        <Button
-          onClick={createLobby}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-        >
-          Create Room
-        </Button>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4">
+        <div className="w-full max-w-md">
+          <div className="flex flex-col items-center mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <Dices className="h-8 w-8 text-emerald-600" />
+              <h1 className="text-3xl font-bold text-slate-800">Morphis</h1>
+            </div>
+            <p className="text-slate-600">
+              The strategic board game of transformation
+            </p>
+          </div>
 
-        <p className="mt-4">Or join an existing room:</p>
-        <input
-          type="text"
-          value={joiningCode}
-          onChange={(e) => setJoiningCode(e.target.value)}
-          placeholder="Enter room code"
-          className="px-4 py-2 border border-gray-300 rounded mb-4"
-        />
-        <Button
-          onClick={() => {
-            if (!name.trim()) return alert("Enter a name");
-            socket.emit("joinLobby", { code: joiningCode, name });
-          }}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Join Room
-        </Button>
+          {/* {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )} */}
+
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>Welcome to Morphis</CardTitle>
+              <CardDescription>
+                Enter your name to create or join a game
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Your Name
+                </label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full"
+                />
+              </div>
+
+              <Tabs defaultValue="create" className="w-full mt-6">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="create">Create Room</TabsTrigger>
+                  <TabsTrigger value="join">Join Room</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="create" className="mt-4">
+                  <p className="text-sm text-slate-500 mb-4">
+                    Create a new game room and invite friends to join you
+                  </p>
+                  <Button
+                    onClick={createLobby}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    Create New Room
+                  </Button>
+                </TabsContent>
+
+                <TabsContent value="join" className="mt-4">
+                  <div className="space-y-4">
+                    <div>
+                      <label
+                        htmlFor="roomCode"
+                        className="block text-sm font-medium mb-1"
+                      >
+                        Room Code
+                      </label>
+                      <Input
+                        id="roomCode"
+                        type="text"
+                        value={joiningCode}
+                        onChange={(e) => setJoiningCode(e.target.value)}
+                        placeholder="Enter room code"
+                        className="w-full"
+                      />
+                    </div>
+                    <Button
+                      onClick={() => {
+                        if (!name.trim()) return alert("Enter a name");
+                        socket.emit("joinLobby", { code: joiningCode, name });
+                      }}
+                      className="w-full"
+                    >
+                      Join Room
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+            <CardFooter className="flex justify-center border-t pt-4">
+              <p className="text-xs text-slate-500">
+                © {new Date().getFullYear()} Morphis Game
+              </p>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
     );
   }

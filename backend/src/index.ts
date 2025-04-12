@@ -23,21 +23,44 @@ const io = new Server(httpServer, {
 });
 
 // Constants
-const snakes: Record<number, number> = {
-    16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60,
-    87: 24, 93: 73, 95: 75, 98: 78
-};
+// const snakes: Record<number, number> = {
+//     16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60,
+//     87: 24, 93: 73, 95: 75, 98: 78
+// };
 
-const ladders: Record<number, number> = {
-    1: 38, 4: 14, 9: 31, 21: 42, 28: 84,
-    36: 44, 51: 67, 71: 91, 80: 100
-};
+// const ladders: Record<number, number> = {
+//     1: 38, 4: 14, 9: 31, 21: 42, 28: 84,
+//     36: 44, 51: 67, 71: 91, 80: 100
+// };
+
+const specialBoxes: Record<number, string> = {
+    2: "Swap",
+    3: "Swap",
+    4: "Swap",
+    5: "Swap",
+    6: "+5",
+    7: "+5",
+    8: "+5",
+    9: "-5",
+    10: "-5",
+    12: "Extra Roll",
+    15: "Skip",
+
+    // 15: "PowerUp5",
+    // 18: "PowerUp6",
+    // 21: "PowerUp7",
+    // 24: "PowerUp8",
+    // 27: "PowerUp9",
+    // 30: "PowerUp10",
+}
+
 
 type Player = {
     id: string;
     name: string;
     color: string;
     position: number;
+    powerUps: any[];
 };
 
 type Lobby = {
@@ -45,6 +68,7 @@ type Lobby = {
     players: Player[];
     currentTurn: number;
     started: boolean;
+
 };
 
 const lobbies: Record<string, Lobby> = {};
@@ -63,7 +87,7 @@ io.on("connection", (socket) => {
         const color = "red";
 
         const code = generateLobbyCode();
-        const player: Player = { id: socket.id, name, color, position: 1 };
+        const player: Player = { id: socket.id, name, color, position: 1 , powerUps: []};
 
         const lobby: Lobby = {
             code,
@@ -94,7 +118,7 @@ io.on("connection", (socket) => {
             return;
         }
 
-        const player: Player = { id: socket.id, name, color, position: 1 };
+        const player: Player = { id: socket.id, name, color, position: 1 , powerUps: []};
         lobby.players.push(player);
         socket.join(code);
 
@@ -131,13 +155,26 @@ io.on("connection", (socket) => {
         if (pos > 100) {
             pos = lobby.players[playerIndex].position;
         } 
+       else if(specialBoxes[pos]) {
+            if (specialBoxes[pos] === "Swap") {
+                // Swap positions with the other player
+                lobby.players[playerIndex].powerUps.push( {name: "Swap", timeLeft: 2} );
+                io.to(code).emit("ModalOpen", { message: "You acquired a powerUp: Swap. Use it within the next 2 moves" });
+
+            } else if (specialBoxes[pos] === "+5") {
+                pos += 5;
+                io.to(code).emit("ModalOpen", { message: "You moved 5 spaces forward!" });
+            } else if (specialBoxes[pos] === "-5") {
+                pos -= 5;
+                io.to(code).emit("ModalOpen", { message: "You moved 5 spaces backward!" });
+            } else if (specialBoxes[pos] === "Extra Roll") {
+                // roll += Math.floor(Math.random() * 6) + 1;
+                lobby.players[playerIndex].powerUps.push( {name: "Extra Roll", timeLeft: 2} );
+                io.to(code).emit("ModalOpen", { message: "You acquired a powerUp: Extra Roll. Use it within the next 2 moves" });
+            }
+        }
         
         console.log(`Player ${lobby.players[playerIndex].name} rolled a ${roll} and moved to position ${pos}`);
-        // else if (snakes[pos]) {
-        //     pos = snakes[pos];
-        // } else if (ladders[pos]) {
-        //     pos = ladders[pos];
-        // }
 
         lobby.players[playerIndex].position = pos;
 
