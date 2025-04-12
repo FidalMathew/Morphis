@@ -36,6 +36,7 @@ const ladders: Record<number, number> = {
 type Player = {
     id: string;
     name: string;
+    color: string;
     position: number;
 };
 
@@ -58,8 +59,11 @@ io.on("connection", (socket) => {
     console.log("New socket connected:", socket.id);
 
     socket.on("createLobby", (name: string) => {
+
+        const color = "red";
+
         const code = generateLobbyCode();
-        const player: Player = { id: socket.id, name, position: 0 };
+        const player: Player = { id: socket.id, name, color, position: 1 };
 
         const lobby: Lobby = {
             code,
@@ -78,6 +82,8 @@ io.on("connection", (socket) => {
     socket.on("joinLobby", ({ code, name }: { code: string, name: string }) => {
         const lobby = lobbies[code];
 
+        const color = "blue";
+
         if (!lobby) {
             socket.broadcast.emit("error", "Lobby not found");
             return;
@@ -88,13 +94,13 @@ io.on("connection", (socket) => {
             return;
         }
 
-        const player: Player = { id: socket.id, name, position: 0 };
+        const player: Player = { id: socket.id, name, color, position: 1 };
         lobby.players.push(player);
         socket.join(code);
 
         console.log(`Player ${name} joined lobby ${code}`);
 
-        io.to(code).emit("lobbyJoined", { code:code, players: lobby.players });
+        io.to(code).emit("lobbyJoined", { code:code, player: player,  players: lobby.players });
 
         if (lobby.players.length === 2) {
             lobby.started = true;
@@ -118,18 +124,23 @@ io.on("connection", (socket) => {
         let roll = Math.floor(Math.random() * 6) + 1;
         let pos = lobby.players[playerIndex].position + roll;
 
+
+
         if (pos > 100) {
             pos = lobby.players[playerIndex].position;
-        } else if (snakes[pos]) {
-            pos = snakes[pos];
-        } else if (ladders[pos]) {
-            pos = ladders[pos];
-        }
+        } 
+        
+        console.log(`Player ${lobby.players[playerIndex].name} rolled a ${roll} and moved to position ${pos}`);
+        // else if (snakes[pos]) {
+        //     pos = snakes[pos];
+        // } else if (ladders[pos]) {
+        //     pos = ladders[pos];
+        // }
 
         lobby.players[playerIndex].position = pos;
 
         io.to(code).emit("diceRolled", {
-            playerId: socket.id,
+            player: lobby.players[playerIndex],
             roll,
             position: pos
         });
@@ -191,7 +202,7 @@ app.get("/rollDice", async(_, res) => {
         await rollDice();
         console.log("Dice rolled");
         res.status(200).json({ message: "Dice rolled" });
-        
+
     } catch (error) {
         res.status(500).json({ error: "Error fetching randomness" });
         console.error("Error fetching randomness:", error);

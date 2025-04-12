@@ -8,7 +8,7 @@ import {
 // import socket from "@/socket";
 import { io } from "socket.io-client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type SpecialNumber = {
   x: number;
@@ -26,12 +26,14 @@ export default function Home() {
 
   const [lobbyCode, setLobbyCode] = useState("");
   const [name, setName] = useState("");
-  const [yourId, setYourId] = useState("");
+  const [yourId, setYourId] = useState(null as string | null);
   const [players, setPlayers] = useState([] as any[]);
   const [yourTurn, setYourTurn] = useState(false);
-  const [rollResult, setRollResult] = useState<number | null>(null);
 
   const [currentPlayer, setCurrentPlayer] = useState<"red" | "blue">("red");
+
+  const [myColor, setMyColor] = useState<"red" | "blue" | null>(null);
+
   const [diceValue, setDiceValue] = useState<number | null>(null);
   const [winner, setWinner] = useState<"red" | "blue" | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
@@ -70,14 +72,31 @@ export default function Home() {
     socket.on("lobbyCreated", ({ code, player }) => {
       setLobbyCode(code);
       console.log("Lobby created:", code);
+
+      console.log("Player created:", player, player.id, player.color);
       setYourId(player.id);
+      setMyColor(player.color);
       setPlayers([player]);
     });
 
-    socket.on("lobbyJoined", ({ code, players }) => {
+    socket.on("lobbyJoined", ({ code, player, players }) => {
       setPlayers(players);
       setLobbyCode(code);
-      console.log("Lobby joined:", players);
+
+      console.log(" --- >", yourId, socket.id, myColor);
+
+      if (socket.id && socket.id === player.id) {
+        console.log("updating ----- ");
+        setYourId(socket.id);
+        setMyColor(player.color);
+      }
+
+      console.log("updated: ", yourId, socket.id, myColor);
+
+      console.log("Lobby joined:", code, player, players);
+
+      // console.log("Testing: ", socket.id, players);
+      // console.log("Lobby joined:", players);
     });
 
     socket.on("gameStart", ({ turn, players }) => {
@@ -85,17 +104,24 @@ export default function Home() {
       setPlayers(players);
       setYourTurn(turn === socket.id);
 
+      if (myColor) {
+        setCurrentPlayer(
+          turn === socket.id ? myColor : myColor === "red" ? "blue" : "red"
+        );
+      }
+
       console.log("Game started:", players);
       console.log("Your turn:", turn === socket.id);
     });
 
-    socket.on("diceRolled", ({ playerId, roll, position }) => {
-      setPlayers((prev) =>
-        prev.map((p) => (p.id === playerId ? { ...p, position } : p))
-      );
-
+    socket.on("diceRolled", ({ player, roll, position }) => {
+      // setPlayers((prev) =>
+      //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
+      // );
+      handlePlayerMove(position);
+      // setCurrentPlayer()
       // Set valid move destination
-      setValidMoves([position]);
+      // setValidMoves([position]);
     });
 
     socket.on("nextTurn", ({ turn }) => {
@@ -126,6 +152,14 @@ export default function Home() {
       socket.off("error");
     };
   }, []);
+
+  useEffect(() => {
+    console.log("useEffect: ", yourId, myColor);
+  }, [yourId, myColor]);
+
+  // useEffect(() => {
+  //   handlePlayerMove(0);
+  // }, [players]  );
 
   const createLobby = () => {
     if (!name.trim()) return alert("Enter a name");
@@ -266,8 +300,20 @@ export default function Home() {
   const handlePlayerMove = (destinationNumber: number) => {
     if (!validMoves.includes(destinationNumber) || isAnimating) return;
 
-    const player = currentPlayer;
-    const currentNumber = playerNumbers[player];
+    console.log("Moving player to: ", destinationNumber);
+
+    let currentNumber = -1;
+
+    for (let pl of players) {
+      if (pl.color === currentPlayer) {
+        console.log("Player: ", pl);
+        currentNumber = pl.position;
+        break;
+      }
+    }
+
+    console.log("Current Number: ", currentNumber);
+
     const newNumber = destinationNumber;
 
     // Start animation
@@ -286,7 +332,7 @@ export default function Home() {
           const stepCoords = getCoordsFromNumber(stepNumber);
           setPlayerPositions((prev) => ({
             ...prev,
-            [player]: stepCoords,
+            [currentPlayer]: stepCoords,
           }));
         }
         currentStep++;
@@ -308,7 +354,7 @@ export default function Home() {
       // Update player number in state
       setPlayerNumbers((prev) => ({
         ...prev,
-        [player]: newNumber,
+        [currentPlayer]: newNumber,
       }));
 
       // Check if landed on a special box
@@ -323,7 +369,7 @@ export default function Home() {
 
       // Check for win condition
       if (newNumber === 100) {
-        setWinner(player);
+        setWinner(currentPlayer);
       }
 
       // Switch player unless dice value is 6
@@ -336,66 +382,66 @@ export default function Home() {
     };
   };
 
-  const handleDragStart = (
-    e: React.DragEvent<HTMLDivElement>,
-    player: "red" | "blue" | null
-  ) => {
-    if (player !== currentPlayer || validMoves.length === 0) {
-      e.preventDefault();
-      return;
-    }
-    setDraggedPlayer(player);
+  // const handleDragStart = (
+  //   e: React.DragEvent<HTMLDivElement>,
+  //   player: "red" | "blue" | null
+  // ) => {
+  //   if (player !== currentPlayer || validMoves.length === 0) {
+  //     e.preventDefault();
+  //     return;
+  //   }
+  //   setDraggedPlayer(player);
 
-    // Required for Firefox
-    if (e.dataTransfer) {
-      e.dataTransfer.setData("text/plain", player);
-      e.dataTransfer.effectAllowed = "move";
-    }
-  };
+  //   // Required for Firefox
+  //   if (e.dataTransfer) {
+  //     e.dataTransfer.setData("text/plain", player);
+  //     e.dataTransfer.effectAllowed = "move";
+  //   }
+  // };
 
-  // Handle drag over
-  const handleDragOver = (
-    e: React.DragEvent<HTMLDivElement>,
-    number: number
-  ) => {
-    e.preventDefault();
-    if (validMoves.includes(number)) {
-      e.dataTransfer.dropEffect = "move";
-    } else {
-      e.dataTransfer.dropEffect = "none";
-    }
-  };
+  // // Handle drag over
+  // const handleDragOver = (
+  //   e: React.DragEvent<HTMLDivElement>,
+  //   number: number
+  // ) => {
+  //   e.preventDefault();
+  //   if (validMoves.includes(number)) {
+  //     e.dataTransfer.dropEffect = "move";
+  //   } else {
+  //     e.dataTransfer.dropEffect = "none";
+  //   }
+  // };
 
-  // Handle drop
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, number: number) => {
-    e.preventDefault();
-    if (validMoves.includes(number) && draggedPlayer === currentPlayer) {
-      handlePlayerMove(number);
-    }
-    setDraggedPlayer(null);
-  };
+  // // Handle drop
+  // const handleDrop = (e: React.DragEvent<HTMLDivElement>, number: number) => {
+  //   e.preventDefault();
+  //   if (validMoves.includes(number) && draggedPlayer === currentPlayer) {
+  //     handlePlayerMove(number);
+  //   }
+  //   setDraggedPlayer(null);
+  // };
 
-  // For mobile touch events
-  const handleTouchStart = (player: "red" | "blue" | null) => {
-    if (player !== currentPlayer || validMoves.length === 0) return;
-    setDraggedPlayer(player as any);
-  };
+  // // For mobile touch events
+  // const handleTouchStart = (player: "red" | "blue" | null) => {
+  //   if (player !== currentPlayer || validMoves.length === 0) return;
+  //   setDraggedPlayer(player as any);
+  // };
 
-  const handleTouchEnd = (
-    e: React.TouchEvent<HTMLDivElement>,
-    number: number
-  ) => {
-    if (validMoves.includes(number) && draggedPlayer === currentPlayer) {
-      handlePlayerMove(number);
-    }
-    setDraggedPlayer(null);
-  };
+  // const handleTouchEnd = (
+  //   e: React.TouchEvent<HTMLDivElement>,
+  //   number: number
+  // ) => {
+  //   if (validMoves.includes(number) && draggedPlayer === currentPlayer) {
+  //     handlePlayerMove(number);
+  //   }
+  //   setDraggedPlayer(null);
+  // };
 
   // Handle click on tooltip
-  const handleTooltipClick = () => {
-    setShowTooltip(false);
-    setShowModal(true);
-  };
+  // const handleTooltipClick = () => {
+  //   setShowTooltip(false);
+  //   setShowModal(true);
+  // };
 
   // Handle modal close
   const closeModal = () => {
@@ -403,47 +449,51 @@ export default function Home() {
     setSelectedSpecialBox(null);
   };
 
-  // Apply special box effect
-  const applySpecialEffect = () => {
-    if (!selectedSpecialBox) return;
-
-    // Use the player who triggered the special box
-    const player =
-      selectedSpecialBox.effect === "good" ||
-      selectedSpecialBox.effect === "bad"
-        ? currentPlayer
-        : currentPlayer;
-    const currentNumber = playerNumbers[player];
-    let newNumber;
-
-    if (selectedSpecialBox.effect === "good") {
-      // Move forward 5 spaces
-      newNumber = Math.min(100, currentNumber + 5);
-    } else {
-      // Move back 5 spaces
-      newNumber = Math.max(1, currentNumber - 5);
-    }
-
-    // Update position
-    const newCoords = getCoordsFromNumber(newNumber);
-
-    setPlayerPositions((prev) => ({
-      ...prev,
-      [player]: newCoords,
-    }));
-
-    setPlayerNumbers((prev) => ({
-      ...prev,
-      [player]: newNumber,
-    }));
-
-    // Check for win condition
-    if (newNumber === 100) {
-      setWinner(player);
-    }
-
-    closeModal();
+  const handleMove = () => {
+    console.log("jaydeep", playerPositions, playerNumbers);
   };
+
+  // Apply special box effect
+  // const applySpecialEffect = () => {
+  //   if (!selectedSpecialBox) return;
+
+  //   // Use the player who triggered the special box
+  //   const player =
+  //     selectedSpecialBox.effect === "good" ||
+  //     selectedSpecialBox.effect === "bad"
+  //       ? currentPlayer
+  //       : currentPlayer;
+  //   const currentNumber = playerNumbers[player];
+  //   let newNumber;
+
+  //   if (selectedSpecialBox.effect === "good") {
+  //     // Move forward 5 spaces
+  //     newNumber = Math.min(100, currentNumber + 5);
+  //   } else {
+  //     // Move back 5 spaces
+  //     newNumber = Math.max(1, currentNumber - 5);
+  //   }
+
+  //   // Update position
+  //   const newCoords = getCoordsFromNumber(newNumber);
+
+  //   setPlayerPositions((prev) => ({
+  //     ...prev,
+  //     [player]: newCoords,
+  //   }));
+
+  //   setPlayerNumbers((prev) => ({
+  //     ...prev,
+  //     [player]: newNumber,
+  //   }));
+
+  //   // Check for win condition
+  //   if (newNumber === 100) {
+  //     setWinner(player);
+  //   }
+
+  //   closeModal();
+  // };
 
   // If Room Code is not Present, Show Create Room Button or Join Room Button
 
@@ -491,11 +541,11 @@ export default function Home() {
   // If Game is Not Started, Show Waiting for Players
 
   // Handle direct click on a valid destination (alternative to drag & drop)
-  const handleDestinationClick = (number: number) => {
-    if (validMoves.includes(number)) {
-      handlePlayerMove(number);
-    }
-  };
+  // const handleDestinationClick = (number: number) => {
+  //   if (validMoves.includes(number)) {
+  //     handlePlayerMove(number);
+  //   }
+  // };
   return (
     <div className="flex flex-col items-center p-4 max-w-4xl mx-auto h-screen">
       <h1 className="text-2xl font-bold mb-4">
@@ -540,6 +590,25 @@ export default function Home() {
             >
               Roll Dice
             </Button>
+
+            <Button
+              onClick={() => {
+                console.log(
+                  "dsaassddas ",
+                  yourId,
+                  myColor,
+                  players,
+                  lobbyCode,
+                  "currentPlayer: ",
+                  currentPlayer
+                );
+              }}
+            >
+              {" "}
+              Console
+            </Button>
+
+            <Button onClick={handleMove}> Move</Button>
 
             {diceValue && (
               <div className="px-4 py-2 bg-gray-100 rounded">
@@ -615,11 +684,11 @@ export default function Home() {
                     : ""
                 }
               `}
-                onDragOver={(e) => handleDragOver(e, number)}
-                onDrop={(e) => handleDrop(e, number)}
-                onTouchEnd={(e) => handleTouchEnd(e, number)}
+                // onDragOver={(e) => handleDragOver(e, number)}
+                // onDrop={(e) => handleDrop(e, number)}
+                // onTouchEnd={(e) => handleTouchEnd(e, number)}
                 onClick={() => {
-                  handleDestinationClick(number);
+                  // handleDestinationClick(number);
                 }}
               >
                 <div className="grid place-content-center h-full w-full text-lg font-semibold text-gray-700 p-1">
@@ -645,10 +714,10 @@ export default function Home() {
                       validMoves.length > 0 &&
                       !isAnimating
                     }
-                    onDragStart={(e) =>
-                      !isAnimating && handleDragStart(e, "red")
-                    }
-                    onTouchStart={() => !isAnimating && handleTouchStart("red")}
+                    // onDragStart={(e) =>
+                    //   !isAnimating && handleDragStart(e, "red")
+                    // }
+                    // onTouchStart={() => !isAnimating && handleTouchStart("red")}
                     ref={currentPlayer === "red" ? dragRef : null}
                   ></div>
                 )}
@@ -671,24 +740,24 @@ export default function Home() {
                       validMoves.length > 0 &&
                       !isAnimating
                     }
-                    onDragStart={(e) =>
-                      !isAnimating && handleDragStart(e, "blue")
-                    }
-                    onTouchStart={() =>
-                      !isAnimating && handleTouchStart("blue")
-                    }
+                    // onDragStart={(e) =>
+                    //   !isAnimating && handleDragStart(e, "blue")
+                    // }
+                    // onTouchStart={() =>
+                    //   !isAnimating && handleTouchStart("blue")
+                    // }
                     ref={currentPlayer === "blue" ? dragRef : null}
                   ></div>
                 )}
 
-                {showTooltipHere && (
+                {/* {showTooltipHere && (
                   <div
                     className="absolute z-20 bg-white border border-gray-300 rounded p-2 shadow-lg cursor-pointer"
                     onClick={() => handleTooltipClick()}
                   >
                     Click to see what happens
                   </div>
-                )}
+                )} */}
               </div>
             );
           })
@@ -728,7 +797,7 @@ export default function Home() {
                 Cancel
               </Button>
               <Button
-                onClick={applySpecialEffect}
+                // onClick={applySpecialEffect}
                 className={`px-4 py-2 text-white rounded ${
                   selectedSpecialBox.effect === "good"
                     ? "bg-green-500 hover:bg-green-600"
