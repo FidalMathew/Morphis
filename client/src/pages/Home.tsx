@@ -114,18 +114,30 @@ export default function Home() {
       console.log("Your turn:", turn === socket.id);
     });
 
-    socket.on("diceRolled", ({ player, roll, position }) => {
-      // setPlayers((prev) =>
-      //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
-      // );
-      handlePlayerMove(position);
-      // setCurrentPlayer()
-      // Set valid move destination
-      // setValidMoves([position]);
-    });
+    socket.on(
+      "diceRolled",
+      ({ prevPosition, roll, position, currentPlayer }) => {
+        console.log(
+          "Dice rolled:",
+          prevPosition,
+          roll,
+          position,
+          currentPlayer
+        );
+        // setPlayers((prev) =>
+        //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
+        // );
+        handlePlayerMove(position, prevPosition, currentPlayer);
+        // setCurrentPlayer()
+        // Set valid move destination
+        // setValidMoves([position]);
+      }
+    );
 
     socket.on("nextTurn", ({ turn }) => {
       setYourTurn(turn === socket.id);
+
+      setCurrentPlayer((prev) => (prev === "red" ? "blue" : "red"));
       console.log("Your turn:", turn === socket.id);
     });
 
@@ -297,24 +309,26 @@ export default function Home() {
     // setValidMoves([newNumber]);
   };
 
-  const handlePlayerMove = (destinationNumber: number) => {
-    if (!validMoves.includes(destinationNumber) || isAnimating) return;
+  const handlePlayerMove = (
+    destinationNumber: number,
+    prevPosition: number,
+    currentPlayer: "red" | "blue"
+  ) => {
+    // if (!validMoves.includes(destinationNumber) || isAnimating) return;
 
-    console.log("Moving player to: ", destinationNumber);
+    // console.log("Moving player to: ", destinationNumber);
 
-    let currentNumber = -1;
-
-    for (let pl of players) {
-      if (pl.color === currentPlayer) {
-        console.log("Player: ", pl);
-        currentNumber = pl.position;
-        break;
-      }
-    }
-
-    console.log("Current Number: ", currentNumber);
-
+    const currentNumber = prevPosition;
     const newNumber = destinationNumber;
+
+    console.log(
+      "Current Number: ",
+      currentNumber,
+      "New Number: ",
+      newNumber,
+      "Current Player: ",
+      currentPlayer
+    );
 
     // Start animation
     setIsAnimating(true);
@@ -373,9 +387,9 @@ export default function Home() {
       }
 
       // Switch player unless dice value is 6
-      if (diceValue !== 6) {
-        setCurrentPlayer((prev) => (prev === "red" ? "blue" : "red"));
-      }
+      // if (diceValue !== 6) {
+      //   setCurrentPlayer((prev) => (prev === "red" ? "blue" : "red"));
+      // }
 
       setWaitingForRoll(true);
       setIsAnimating(false);

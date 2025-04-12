@@ -121,6 +121,8 @@ io.on("connection", (socket) => {
             return;
         }
 
+        const prevPosition = lobby.players[playerIndex].position;
+
         let roll = Math.floor(Math.random() * 6) + 1;
         let pos = lobby.players[playerIndex].position + roll;
 
@@ -140,9 +142,10 @@ io.on("connection", (socket) => {
         lobby.players[playerIndex].position = pos;
 
         io.to(code).emit("diceRolled", {
-            player: lobby.players[playerIndex],
+            prevPosition,
             roll,
-            position: pos
+            position: pos,
+            currentPlayer: lobby.players[playerIndex].color
         });
 
         if (pos === 100) {
