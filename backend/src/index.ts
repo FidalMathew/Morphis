@@ -44,7 +44,6 @@ const specialBoxes: Record<number, string> = {
     9: "-5",
     10: "-5",
     12: "Extra Roll",
-    15: "Skip",
     16: "Swap",
     17: "Swap",
     18: "Swap",
@@ -99,8 +98,8 @@ io.on("connection", (socket) => {
         const code = generateLobbyCode();
         const player: Player = { id: socket.id, name, color, position: 1 , powerUps: [
 
-            {name: "Swap", timeLeft: 2},
-            {name: "Extra Roll", timeLeft: 2}
+            // {name: "Swap", timeLeft: 3},
+            // {name: "Extra Roll", timeLeft: 3}
         ]};
 
         const lobby: Lobby = {
@@ -170,21 +169,33 @@ io.on("connection", (socket) => {
             pos = lobby.players[playerIndex].position;
         } 
        else if(specialBoxes[pos]) {
+            console.log("Special box found at position:", pos, specialBoxes[pos]);
+
             if (specialBoxes[pos] === "Swap") {
                 // Swap positions with the other player
-                lobby.players[playerIndex].powerUps.push( {name: "Swap", timeLeft: 2} );
-                io.to(code).emit("ModalOpen", { message: "You acquired a powerUp: Swap. Use it within the next 2 moves" });
+                // if player contains swap, increase its time by 2
+
+
+
+                lobby.players[playerIndex].powerUps.push( {name: "Swap", timeLeft: 3} );
+                console.log("Swap acquired");
+                io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You acquired a powerUp: Swap. Use it within the next 2 moves" });
 
             } else if (specialBoxes[pos] === "+5") {
                 pos += 5;
-                io.to(code).emit("ModalOpen", { message: "You moved 5 spaces forward!" });
+
+                io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You moved 5 spaces forward!" });
             } else if (specialBoxes[pos] === "-5") {
                 pos -= 5;
-                io.to(code).emit("ModalOpen", { message: "You moved 5 spaces backward!" });
+                io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You moved 5 spaces backward!" });
             } else if (specialBoxes[pos] === "Extra Roll") {
                 // roll += Math.floor(Math.random() * 6) + 1;
-                lobby.players[playerIndex].powerUps.push( {name: "Extra Roll", timeLeft: 2} );
-                io.to(code).emit("ModalOpen", { message: "You acquired a powerUp: Extra Roll. Use it within the next 2 moves" });
+                console.log("Extra Roll acquired");
+                lobby.players[playerIndex].powerUps.push( {name: "Extra Roll", timeLeft: 3} );
+                io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You acquired a powerUp: Extra Roll. Use it within the next 2 moves" });
+            }
+            else{
+
             }
         }
         

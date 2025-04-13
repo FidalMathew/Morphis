@@ -68,6 +68,8 @@ export default function Home() {
 
   const [isAnimating, setIsAnimating] = useState(false);
 
+  const [modelOpenForPlayer, setModelOpenForPlayer] = useState(null);
+
   const dragRef = useRef(null);
 
   const [yourColor, setYourColor] = useState<"red" | "blue" | null>(null);
@@ -147,6 +149,7 @@ export default function Home() {
           currentPlayer,
           players
         );
+        // setSpecialMessage("");
         setDiceValue(roll);
         // setPlayers((prev) =>
         //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
@@ -179,12 +182,18 @@ export default function Home() {
       console.log("Your turn:", turn === socket.id);
     });
 
-    socket.on("ModalOpen", ({ message }) => {
-      console.log("ModalOpen: ", message);
+    socket.on("ModalOpen", ({ player, message }) => {
+      console.log("ModalOpen: ", message, player.id, yourId);
+
+      // if (player.id === yourId) {
+      //   setSpecialMessage(message);
+      //   // alert(message);
+      //   console.log("ModalOpen: --inside", message);
+      //   setModal(true);
+      // }
+
+      setModelOpenForPlayer(player.id);
       setSpecialMessage(message);
-      // alert(message);
-      console.log("ModalOpen: ", message);
-      setModal(true);
     });
 
     socket.on("updatePlayerArray", ({ players }) => {
@@ -219,6 +228,20 @@ export default function Home() {
       socket.off("error");
     };
   }, []);
+
+  useEffect(() => {
+    console.log("Modal: special ", modal, modelOpenForPlayer, yourId);
+    if (yourId !== null && modelOpenForPlayer === yourId) {
+      setModal(true);
+    } else {
+      setModal(false);
+    }
+  }, [modelOpenForPlayer]);
+
+  // useEffect(() => {
+  //   console.log("Modal: special ", modal);
+  //   if (modal == false) setSpecialMessage("");
+  // }, [modal]);
 
   useEffect(() => {
     console.log("useEffect: ", yourId, myColor);
@@ -984,6 +1007,11 @@ export default function Home() {
               >
                 Roll Dice
               </Button>
+
+              <Button onClick={() => console.log("modal value: ", modal)}>
+                {" "}
+                Modal value
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -1037,7 +1065,12 @@ export default function Home() {
       )} */}
 
       {specialMessage !== "" && !isAnimating && !yourTurn && (
-        <Dialog open={modal} onOpenChange={setModal}>
+        <Dialog
+          open={modal}
+          onOpenChange={(isOpen) => {
+            setModal(isOpen); // Update the modal state based on the dialog's open state
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>🎉 You landed into a special box</DialogTitle>
