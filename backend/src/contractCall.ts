@@ -10,7 +10,8 @@ import abi from './RandomnessConsumer.json'; // Replace with your values
 dotenv.config();
 
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+// const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const PRIVATE_KEY = "1e14b93e0129cf29eb247a8dac88d1a3edef6f5a206c7fc35bcc52878641e77d";
 const CONTRACT_ADDRESS = "0x91cF36c6391071d9Be70a9863BBC67E706217282";
 
 // ABI of the contract

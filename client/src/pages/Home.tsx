@@ -154,13 +154,20 @@ export default function Home() {
           currentPlayer,
           players
         );
+
+        // setCustomLoading(true); // Set custom loading state to true
+
+        setTimeout(() => {
+          // setCustomLoading(false); // Turn off custom loading state after 15 seconds
+          setDiceValue(roll);
+          // setPlayers((prev) =>
+          //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
+          // );
+          setPlayers(players);
+          handlePlayerMove(position, prevPosition, currentPlayer);
+        }, 5000);
+
         // setSpecialMessage("");
-        setDiceValue(roll);
-        // setPlayers((prev) =>
-        //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
-        // );
-        setPlayers(players);
-        handlePlayerMove(position, prevPosition, currentPlayer);
         // setCurrentPlayer()
         // Set valid move destination
         // setValidMoves([position]);
@@ -176,7 +183,10 @@ export default function Home() {
           prevPosition,
           currentPlayer
         );
-        handlePlayerMove(position, prevPosition, currentPlayer);
+
+        setTimeout(() => {
+          handlePlayerMove(position, prevPosition, currentPlayer);
+        }, 5000);
       }
     );
 
@@ -197,13 +207,17 @@ export default function Home() {
       //   setModal(true);
       // }
 
-      setModelOpenForPlayer(player.id);
-      setSpecialMessage(message);
+      setTimeout(() => {
+        setModelOpenForPlayer(player.id);
+        setSpecialMessage(message);
+      }, 1000);
     });
 
     socket.on("updatePlayerArray", ({ players }) => {
       console.log("updatePlayerArray: ", players);
-      setPlayers(players);
+      setTimeout(() => {
+        setPlayers(players);
+      }, 5000);
     });
 
     socket.on("gameOver", ({ winner }) => {
@@ -397,23 +411,20 @@ export default function Home() {
   //   generateSpecialBoxes();
   // };
 
+  const [customLoading, setCustomLoading] = useState(false);
+
   const rollDice = () => {
     if (winner || !gameStarted || !waitingForRoll) return;
 
-    // const value = Math.floor(Math.random() * 6) + 1;
+    setCustomLoading(true); // Set custom loading state to true
+
+    setTimeout(() => {
+      setCustomLoading(false); // Turn off custom loading state after 15 seconds
+    }, 5000);
+
     socket.emit("rollDice", {
       code: lobbyCode,
     });
-
-    // setDiceValue(value as number);
-    // setWaitingForRoll(false);
-
-    // // Calculate valid destination
-    // const currentNumber = playerNumbers[currentPlayer];
-    // const newNumber = Math.min(100, currentNumber + value);
-
-    // Set valid move destination
-    // setValidMoves([newNumber]);
   };
 
   const handlePlayerMove = (
@@ -1031,20 +1042,28 @@ export default function Home() {
                   Dice Value
                 </span>
                 {/* {"renderDice(diceValue)"} */}
-                {diceValue && diceValue}
-                <Button
-                  onClick={rollDice}
-                  variant={"outline"}
-                  disabled={!yourTurn || winner !== null}
-                  className={`px-4 py-2 text-black ${
-                    yourTurn && !winner ? "" : "bg-gray-300 "
-                  } text-white rounded`}
-                  style={{
-                    color: "black",
-                  }}
-                >
-                  Roll Dice
-                </Button>
+
+                {!customLoading && diceValue && diceValue}
+                {customLoading ? (
+                  <Button disabled>
+                    <Loader2 className="animate-spin" />
+                    Please wait
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={rollDice}
+                    variant={"outline"}
+                    disabled={!yourTurn || winner !== null}
+                    className={`px-4 py-2 text-black ${
+                      yourTurn && !winner ? "" : "bg-gray-300 "
+                    } text-white rounded`}
+                    style={{
+                      color: "black",
+                    }}
+                  >
+                    Roll Dice
+                  </Button>
+                )}
 
                 {/* <Button onClick={() => console.log("modal value: ", modal)}>
                   {" "}
