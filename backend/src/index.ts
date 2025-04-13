@@ -207,6 +207,13 @@ io.on("connection", (socket) => {
             powerUp.timeLeft -= 1;
         });
 
+        // remove powerup if time left is 0
+        lobby.players[playerIndex].powerUps = lobby.players[playerIndex].powerUps.filter((powerUp: any) => powerUp.timeLeft > 0);
+        console.log("Updated players:", lobby.players);
+        io.to(code).emit("updatePlayerArray", {
+            players: lobby.players,
+        })
+
         if (pos === 100) {
             io.to(code).emit("gameOver", { winner: lobby.players[playerIndex].name });
             delete lobbies[code];
