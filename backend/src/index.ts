@@ -22,16 +22,6 @@ const io = new Server(httpServer, {
     },
 });
 
-// Constants
-// const snakes: Record<number, number> = {
-//     16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60,
-//     87: 24, 93: 73, 95: 75, 98: 78
-// };
-
-// const ladders: Record<number, number> = {
-//     1: 38, 4: 14, 9: 31, 21: 42, 28: 84,
-//     36: 44, 51: 67, 71: 91, 80: 100
-// };
 
 // const specialBoxes: Record<number, string> = {
 //     2: "Swap",
@@ -443,7 +433,32 @@ app.get("/rollDice", async(_, res) => {
         res.status(500).json({ error: "Error fetching randomness" });
         console.error("Error fetching randomness:", error);
     }
-});
+}); 
+
+
+const getRandomNumber = async () => {
+
+    try {
+        const value = await readRandomness();
+        const lastHash = value.toString();
+
+        await rollDice();
+        
+        const lastHexChar = lastHash.slice(-1);
+        // Convert it to an integer (base 16)
+        const lastDigit = parseInt(lastHexChar, 16);
+    
+        // Get a random value from 1 to 6 using modulo
+        const randomValue = (lastDigit % 6) + 1;
+
+        return randomValue;
+
+    } catch (error) {
+        
+        console.error("Error fetching randomness:", error);
+        throw new Error("Error fetching randomness");
+    }
+}
 
 httpServer.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
