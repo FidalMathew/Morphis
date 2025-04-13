@@ -3,7 +3,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -13,7 +12,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 import { Input } from "@/components/ui/input";
@@ -22,8 +20,8 @@ import { Dices, Loader2 } from "lucide-react";
 // import socket from "@/socket";
 import { io } from "socket.io-client";
 
-import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useRef, useState } from "react";
 
 type SpecialNumber = {
   x: number;
@@ -156,6 +154,19 @@ export default function Home() {
       }
     );
 
+    socket.on(
+      "updateHandlePlayerMove",
+      ({ position, prevPosition, currentPlayer }) => {
+        console.log(
+          "updateHandlePlayerMove: ",
+          position,
+          prevPosition,
+          currentPlayer
+        );
+        handlePlayerMove(position, prevPosition, currentPlayer);
+      }
+    );
+
     socket.on("nextTurn", ({ turn }) => {
       setYourTurn(turn === socket.id);
 
@@ -166,7 +177,13 @@ export default function Home() {
     socket.on("ModalOpen", ({ message }) => {
       console.log("ModalOpen: ", message);
       // alert(message);
+      console.log("ModalOpen: ", message);
       setModal(true);
+    });
+
+    socket.on("updatePlayerArray", ({ players }) => {
+      console.log("updatePlayerArray: ", players);
+      setPlayers(players);
     });
 
     socket.on("gameOver", ({ winner }) => {
@@ -663,6 +680,15 @@ export default function Home() {
     );
   }
 
+  const usePowerUp = (powerUpName: string) => {
+    console.log("Using power up");
+    socket.emit("usePowerUp", {
+      code: lobbyCode,
+      player: yourId,
+      powerUp: powerUpName,
+    });
+  };
+
   return (
     <div className="flex justify-center items-center p-4 h-screen w-full">
       {/* <Button
@@ -891,12 +917,13 @@ export default function Home() {
                     >
                       <Badge
                         variant="outline"
-                        className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs"
+                        className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs cursor-pointer"
+                        onClick={() => usePowerUp(powerUp.name)}
                       >
                         {powerUp.name}
                       </Badge>
                       <span className="text-sm text-gray-700">
-                        {powerUp.name}
+                        Turns till it exhaust: {powerUp.timeLeft}
                       </span>
                     </div>
                   )
@@ -1008,11 +1035,14 @@ export default function Home() {
                       powerUp: { name: string; timeLeft: number },
                       index: number
                     ) => (
-                      <div className="py-5 text-center font-semibold text-xl">
+                      <p
+                        className="py-5 text-center font-semibold text-xl"
+                        key={index}
+                      >
                         <span className="text-sm text-gray-700">
                           You got {powerUp.name} for {powerUp.timeLeft} turns
                         </span>
-                      </div>
+                      </p>
                     )
                   )}
               </DialogDescription>

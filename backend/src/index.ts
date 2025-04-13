@@ -45,6 +45,13 @@ const specialBoxes: Record<number, string> = {
     10: "-5",
     12: "Extra Roll",
     15: "Skip",
+    16: "Swap",
+    17: "Swap",
+    18: "Swap",
+    19: "Swap",
+    20: "Swap",
+    21: "Swap",
+
 
     // 15: "PowerUp5",
     // 18: "PowerUp6",
@@ -90,7 +97,11 @@ io.on("connection", (socket) => {
         const color = "red";
 
         const code = generateLobbyCode();
-        const player: Player = { id: socket.id, name, color, position: 1 , powerUps: []};
+        const player: Player = { id: socket.id, name, color, position: 1 , powerUps: [
+
+            {name: "Swap", timeLeft: 2},
+            {name: "Extra Roll", timeLeft: 2}
+        ]};
 
         const lobby: Lobby = {
             code,
@@ -189,6 +200,13 @@ io.on("connection", (socket) => {
             players: lobby.players,
         });
 
+
+        // reduce powerup time left
+
+        lobby.players[playerIndex].powerUps.forEach((powerUp: any) => {
+            powerUp.timeLeft -= 1;
+        });
+
         if (pos === 100) {
             io.to(code).emit("gameOver", { winner: lobby.players[playerIndex].name });
             delete lobbies[code];
@@ -201,7 +219,98 @@ io.on("connection", (socket) => {
     });
     
 
-    socket.on("usePowerUp", ({ code, powerUp }: { code: string, powerUp: string }) =>{})
+    socket.on("usePowerUp", ({ code, playerId, powerUp }: { code: string, playerId: string, powerUp: string }) =>{
+
+        const lobby = lobbies[code];
+        if (!lobby || !lobby.started) return;
+
+        const playerIndex = lobby.players.findIndex(p => p.id === socket.id); // use socketId instead if it doesn't work
+
+        console.log("Player index:", playerIndex, lobby.currentTurn);
+        if (playerIndex !== lobby.currentTurn) {
+            socket.emit("notYourTurn");
+            return;
+        }
+
+
+        const prevPlayers = lobby.players.map((player) => ({
+            id: player.id,
+            color: player.color,
+            name: player.name,
+            position: player.position,
+            powerUps: player.powerUps,
+        }));
+
+        console.log("prevPlayers", prevPlayers);
+
+        if (powerUp === "Swap") {
+            const otherPlayerIndex = (playerIndex + 1) % 2;
+            const tempPosition = lobby.players[playerIndex].position;
+            lobby.players[playerIndex].position = lobby.players[otherPlayerIndex].position;
+            lobby.players[otherPlayerIndex].position = tempPosition;
+
+            io.to(code).emit("powerUpUsed", {
+                player: lobby.players[playerIndex],
+                otherPlayer: lobby.players[otherPlayerIndex],
+                powerUp: "Swap"
+            });
+        } else if (powerUp === "Extra Roll") {
+            const extraRoll = Math.floor(Math.random() * 6) + 1;
+            let pos = lobby.players[playerIndex].position + extraRoll;
+
+            if (pos > 100) {
+                pos = lobby.players[playerIndex].position;
+            } 
+           
+            console.log(`Player ${lobby.players[playerIndex].name} used Extra Roll and rolled a ${extraRoll} and moved to position ${pos}`);
+
+            lobby.players[playerIndex].position = pos;
+
+            // io.to(code).emit("diceRolled", {
+            //     prevPosition: lobby.players[playerIndex].position,
+            //     roll: extraRoll,
+            //     position: pos,
+            //     currentPlayer: lobby.players[playerIndex].color,
+            //     players: lobby.players,
+            // });
+
+        }
+
+        // Remove the power-up from the player's list
+        const powerUpIndex = lobby.players[playerIndex].powerUps.findIndex((p: any) => p.name === powerUp);
+        if (powerUpIndex !== -1) {
+            lobby.players[playerIndex].powerUps.splice(powerUpIndex, 1);
+        }
+
+        io.to(code).emit("updatePlayerArray", {
+            players: lobby.players,
+        })
+
+        console.log("dassada", prevPlayers)
+        console.log("Updated players:", lobby.players);
+
+        for(const player of lobby.players) {
+            for(const prevPlayer of prevPlayers) {
+
+                console.log("Comparing players:", player.id, prevPlayer.id);
+                if(player.id === prevPlayer.id) {
+
+                    console.log("Player ID:", player.id, prevPlayer.id, ": ", player.position, prevPlayer.position);
+                    if(player.position !== prevPlayer.position) {
+
+                        console.log("Player moved:", player.position, prevPlayer.position);
+                        io.to(code).emit("updateHandlePlayerMove",{
+                            position: player.position,
+                            prevPosition: prevPlayer.position,
+                            currentPlayer: player.color
+                        })
+                    }
+                }
+            }
+        }
+
+
+    })
 
 
     socket.on("disconnect", () => {
