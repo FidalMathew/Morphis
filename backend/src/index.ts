@@ -33,32 +33,34 @@ const io = new Server(httpServer, {
 //     36: 44, 51: 67, 71: 91, 80: 100
 // };
 
-const specialBoxes: Record<number, string> = {
-    2: "Swap",
-    3: "Swap",
-    4: "Swap",
-    5: "Swap",
-    6: "+5",
-    7: "+5",
-    8: "+5",
-    9: "-5",
-    10: "-5",
-    12: "Extra Roll",
-    16: "Swap",
-    17: "Swap",
-    18: "Swap",
-    19: "Swap",
-    20: "Swap",
-    21: "Swap",
+// const specialBoxes: Record<number, string> = {
+//     2: "Swap",
+//     3: "Swap",
+//     4: "Swap",
+//     5: "Swap",
+//     6: "+5",
+//     7: "+5",
+//     8: "+5",
+//     9: "-5",
+//     10: "-5",
+//     12: "Extra Roll",
+//     16: "Swap",
+//     17: "Swap",
+//     18: "Swap",
+//     19: "Swap",
+//     20: "Swap",
+//     21: "Swap",
 
 
-    // 15: "PowerUp5",
-    // 18: "PowerUp6",
-    // 21: "PowerUp7",
-    // 24: "PowerUp8",
-    // 27: "PowerUp9",
-    // 30: "PowerUp10",
-}
+//     // 15: "PowerUp5",
+//     // 18: "PowerUp6",
+//     // 21: "PowerUp7",
+//     // 24: "PowerUp8",
+//     // 27: "PowerUp9",
+//     // 30: "PowerUp10",
+// }
+
+let specialBoxesGlobal: Record<number, string> = {};
 
 
 
@@ -182,6 +184,12 @@ io.on("connection", (socket) => {
 
                 console.log(box);
             });
+
+            specialBoxesGlobal = ans.reduce((acc: any, box: any) => {
+                acc[box.number] = box.effect;
+                return acc;
+            }, {});
+            console.log("Special boxes:", specialBoxesGlobal);
             
 
             lobby.started = true;
@@ -221,10 +229,10 @@ io.on("connection", (socket) => {
         if (pos > 100) {
             pos = lobby.players[playerIndex].position;
         } 
-       else if(specialBoxes[pos]) {
-            console.log("Special box found at position:", pos, specialBoxes[pos]);
+       else if(specialBoxesGlobal[pos]) {
+            console.log("Special box found at position:", pos, specialBoxesGlobal[pos]);
 
-            if (specialBoxes[pos] === "Swap") {
+            if (specialBoxesGlobal[pos] === "Swap") {
                 // Swap positions with the other player
                 // if player contains swap, increase its time by 2
 
@@ -234,14 +242,14 @@ io.on("connection", (socket) => {
                 console.log("Swap acquired");
                 io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You acquired a powerUp: Swap. Use it within the next 2 moves" });
 
-            } else if (specialBoxes[pos] === "+5") {
+            } else if (specialBoxesGlobal[pos] === "+5") {
                 pos += 5;
 
                 io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You moved 5 spaces forward!" });
-            } else if (specialBoxes[pos] === "-5") {
+            } else if (specialBoxesGlobal[pos] === "-5") {
                 pos -= 5;
                 io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You moved 5 spaces backward!" });
-            } else if (specialBoxes[pos] === "Extra Roll") {
+            } else if (specialBoxesGlobal[pos] === "Extra Roll") {
                 // roll += Math.floor(Math.random() * 6) + 1;
                 console.log("Extra Roll acquired");
                 lobby.players[playerIndex].powerUps.push( {name: "Extra Roll", timeLeft: 3} );
