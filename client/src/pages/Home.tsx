@@ -163,6 +163,7 @@ export default function Home() {
           // setPlayers((prev) =>
           //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
           // );
+
           setPlayers(players);
           handlePlayerMove(position, prevPosition, currentPlayer);
         }, 5000);

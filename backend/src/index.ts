@@ -138,7 +138,7 @@ io.on("connection", (socket) => {
                 let value = await readRandomness();
             value = value.toString();
             
-            const labels = ["Swap", "+5", "Extra Roll", "-5"];
+            const labels = ["Swap", "+5", "Extra Roll"];
             const specialBoxes: Record<number, { number: number; effect: string }> = {};
             
             const bytes = Array.from(Buffer.from(value.slice(2), "hex")); // Remove '0x' and convert hex to bytes
@@ -199,7 +199,7 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on("rollDice", ({ code }: { code: string }) => {
+    socket.on("rollDice", async ({ code }: { code: string }) => {
         const lobby = lobbies[code];
         if (!lobby || !lobby.started) return;
 
@@ -211,8 +211,8 @@ io.on("connection", (socket) => {
 
         const prevPosition = lobby.players[playerIndex].position;
 
-        let roll = Math.floor(Math.random() * 6) + 1;
-        let pos = lobby.players[playerIndex].position + roll;
+        let roll = getRandomNumber();
+        let pos = lobby.players[playerIndex].position + await roll;
 
 
 
@@ -236,11 +236,15 @@ io.on("connection", (socket) => {
                 pos += 5;
 
                 io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You moved 5 spaces forward!" });
-            } else if (specialBoxesGlobal[pos] === "-5") {
-                pos -= 5;
-                io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You moved 5 spaces backward!" });
-            } else if (specialBoxesGlobal[pos] === "Extra Roll") {
-                // roll += Math.floor(Math.random() * 6) + 1;
+            } 
+            
+            // else if (specialBoxesGlobal[pos] === "-5") {
+            //     pos -= 5;
+            //     io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You moved 5 spaces backward!" });
+            // } 
+            else if (specialBoxesGlobal[pos] === "Extra Roll") {
+              
+                // roll += getRandomNumber();
                 console.log("Extra Roll acquired");
                 lobby.players[playerIndex].powerUps.push( {name: "Extra Roll", timeLeft: 3} );
                 io.to(code).emit("ModalOpen", { player: lobby.players[playerIndex], message: "You acquired a powerUp: Extra Roll. Use it within the next 2 moves" });
@@ -288,7 +292,7 @@ io.on("connection", (socket) => {
     });
     
 
-    socket.on("usePowerUp", ({ code, playerId, powerUp }: { code: string, playerId: string, powerUp: string }) =>{
+    socket.on("usePowerUp", async ({ code, playerId, powerUp }: { code: string, playerId: string, powerUp: string }) =>{
 
         const lobby = lobbies[code];
         if (!lobby || !lobby.started) return;
@@ -324,8 +328,8 @@ io.on("connection", (socket) => {
                 powerUp: "Swap"
             });
         } else if (powerUp === "Extra Roll") {
-            const extraRoll = Math.floor(Math.random() * 6) + 1;
-            let pos = lobby.players[playerIndex].position + extraRoll;
+            const extraRoll = getRandomNumber();
+            let pos = lobby.players[playerIndex].position + await extraRoll;
 
             if (pos > 100) {
                 pos = lobby.players[playerIndex].position;
