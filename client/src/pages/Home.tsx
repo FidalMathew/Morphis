@@ -999,10 +999,22 @@ export default function Home() {
         <Dialog open={modal} onOpenChange={setModal}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Are you absolutely sure?</DialogTitle>
+              <DialogTitle>🎉 You landed into a special box</DialogTitle>
               <DialogDescription>
-                This action cannot be undone. This will permanently delete your
-                account and remove your data from our servers.
+                {players
+                  .find((player) => player.id === yourId)
+                  .powerUps.map(
+                    (
+                      powerUp: { name: string; timeLeft: number },
+                      index: number
+                    ) => (
+                      <div className="py-5 text-center font-semibold text-xl">
+                        <span className="text-sm text-gray-700">
+                          You got {powerUp.name} for {powerUp.timeLeft} turns
+                        </span>
+                      </div>
+                    )
+                  )}
               </DialogDescription>
             </DialogHeader>
           </DialogContent>
