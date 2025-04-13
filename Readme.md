@@ -69,7 +69,7 @@ Morphis uses **Socket.io** to manage multiplayer interactions. Player turns, mov
 ### 📥 Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/morphis.git
+git clone https://github.com/FidalMathew/morphis.git
 cd morphis
 ```
 
