@@ -64,6 +64,7 @@ export default function Home() {
   const [waitingForRoll, setWaitingForRoll] = useState(true);
   const [validMoves, setValidMoves] = useState<number[]>([]);
   const [modal, setModal] = useState(false);
+  const [specialMessage, setSpecialMessage] = useState("");
 
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -176,6 +177,7 @@ export default function Home() {
 
     socket.on("ModalOpen", ({ message }) => {
       console.log("ModalOpen: ", message);
+      setSpecialMessage(message);
       // alert(message);
       console.log("ModalOpen: ", message);
       setModal(true);
@@ -1022,13 +1024,13 @@ export default function Home() {
         </Dialog>
       )} */}
 
-      {!isAnimating && !yourTurn && (
+      {specialMessage !== "" && !isAnimating && !yourTurn && (
         <Dialog open={modal} onOpenChange={setModal}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>🎉 You landed into a special box</DialogTitle>
               <DialogDescription>
-                {players
+                {/* {players
                   .find((player) => player.id === yourId)
                   .powerUps.map(
                     (
@@ -1045,6 +1047,10 @@ export default function Home() {
                       </p>
                     )
                   )}
+                   */}
+                <p className="py-5 text-center font-semibold text-xl text-black">
+                  {specialMessage}
+                </p>
               </DialogDescription>
             </DialogHeader>
           </DialogContent>
