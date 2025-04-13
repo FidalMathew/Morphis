@@ -144,6 +144,7 @@ export default function Home() {
           currentPlayer,
           players
         );
+        setDiceValue(roll);
         // setPlayers((prev) =>
         //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
         // );
@@ -741,12 +742,6 @@ export default function Home() {
 
             <Button onClick={handleMove}> Move</Button> */}
 
-            {diceValue && (
-              <div className="px-4 py-2 bg-gray-100 rounded">
-                Dice: {diceValue}
-              </div>
-            )}
-
             {validMoves.length > 0 && (
               <div className="px-4 py-2 bg-yellow-100 rounded">
                 Drag {currentPlayer === "red" ? "Pink" : "Blue"} to square{" "}
@@ -959,6 +954,7 @@ export default function Home() {
                 Dice Value
               </span>
               {/* {"renderDice(diceValue)"} */}
+              {diceValue && diceValue}
               <Button
                 onClick={rollDice}
                 variant={"outline"}
