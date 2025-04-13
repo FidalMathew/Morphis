@@ -116,7 +116,7 @@ io.on("connection", (socket) => {
         console.log(`Lobby ${code} created by ${name}`);
     });
 
-    socket.on("joinLobby", ({ code, name }: { code: string, name: string }) => {
+    socket.on("joinLobby", async({ code, name }: { code: string, name: string }) => {
         const lobby = lobbies[code];
 
         const color = "blue";
@@ -140,10 +140,56 @@ io.on("connection", (socket) => {
         io.to(code).emit("lobbyJoined", { code:code, player: player,  players: lobby.players });
 
         if (lobby.players.length === 2) {
+
+            let value = await readRandomness();
+            value = value.toString();
+            
+            const labels = ["Swap", "+5", "Extra Roll", "-5"];
+            const specialBoxes: Record<number, { number: number; effect: string }> = {};
+            
+            const bytes = Array.from(Buffer.from(value.slice(2), "hex")); // Remove '0x' and convert hex to bytes
+            
+            const positions = new Set<number>();
+            
+            let i = 0;
+            while (positions.size < 20 && i < bytes.length * 2) {
+                const byte1 = bytes[i % bytes.length];
+                const byte2 = bytes[(i + 1) % bytes.length];
+                const combined = (byte1 << 8) | byte2; // combine 2 bytes into a number
+                const position = 5 + (combined % 91); // value between 5 and 95 inclusive
+            
+                if (!positions.has(position)) {
+                    const label = labels[combined % labels.length];
+                    specialBoxes[position] = {
+                        number: position,
+                        effect: label
+                    };
+                    positions.add(position);
+                }
+                i++;
+            }
+
+            let ans: any[]= [];
+
+            console.log("gggggg")
+            
+            // ✅ Clean individual output
+            Object.values(specialBoxes).forEach((box) => {
+                // console.log(box);
+                ans.push(box);
+
+                console.log(box);
+            });
+            
+
+
+
+
             lobby.started = true;
             io.to(code).emit("gameStart", {
                 turn: lobby.players[lobby.currentTurn].id,
-                players: lobby.players
+                players: lobby.players,
+                specialBoxes: ans,
             });
         }
     });

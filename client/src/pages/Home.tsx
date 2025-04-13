@@ -92,7 +92,7 @@ export default function Home() {
       setLobbyCode(code);
       console.log("Lobby created:", code);
       setGameJoinLoading(true);
-      generateSpecialBoxes();
+
       setYourColor(player.color);
 
       console.log("Player created:", player, player.id, player.color);
@@ -106,7 +106,6 @@ export default function Home() {
       setLobbyCode(code);
       setGameJoinLoading(false);
       setLobbyJoined(true);
-
       console.log(" --- >", yourId, socket.id, myColor);
 
       if (socket.id && socket.id === player.id) {
@@ -123,9 +122,15 @@ export default function Home() {
       // console.log("Lobby joined:", players);
     });
 
-    socket.on("gameStart", ({ turn, players }) => {
+    socket.on("gameStart", ({ turn, players, specialBoxes }) => {
       setGameStarted(true);
       setPlayers(players);
+
+      console.log("specialBoxes: ", specialBoxes);
+
+      generateSpecialBoxes(specialBoxes);
+      // generateSpecialBoxes();
+      // setSpecialBoxes(specialBoxes);
       setYourTurn(turn === socket.id);
 
       if (myColor) {
@@ -312,30 +317,54 @@ export default function Home() {
     blue: startingPositions.blue,
   });
 
-  const generateSpecialBoxes = () => {
-    const specialNumbers = [] as SpecialNumber[];
-    const numSpecialBoxes = 5;
+  const generateSpecialBoxes = (specialNumbers: any[]) => {
+    console.log("Generating special boxes...");
 
-    while (specialNumbers.length < numSpecialBoxes) {
-      const number = Math.floor(Math.random() * 98) + 2; // Skip 1 and 100
+    const specialBoxesWithCoords = Object.values(specialNumbers).map((box) => {
+      const { x, y } = getCoordsFromNumber(box.number);
+      return {
+        x,
+        y,
+        number: box.number,
+        effect: box.effect,
+      };
+    });
 
-      // Don't place special boxes at start, end, or player positions
-      if (
-        number === 1 ||
-        number === 100 ||
-        number === startingPositions.red ||
-        number === startingPositions.blue ||
-        specialNumbers.some((special) => special.number === number)
-      ) {
-        continue;
-      }
+    // const specialNumbers = [] as SpecialNumber[];
+    // const numSpecialBoxes = 5;
 
-      specialNumbers.push({
-        x: getCoordsFromNumber(number).x,
-        y: getCoordsFromNumber(number).y,
-        number,
-        effect: Math.random() > 0.5 ? "good" : "bad",
-      });
+    // while (specialNumbers.length < numSpecialBoxes) {
+    //   const number = Math.floor(Math.random() * 98) + 2; // Skip 1 and 100
+
+    //   // Don't place special boxes at start, end, or player positions
+    //   if (
+    //     number === 1 ||
+    //     number === 100 ||
+    //     number === startingPositions.red ||
+    //     number === startingPositions.blue ||
+    //     specialNumbers.some((special) => special.number === number)
+    //   ) {
+    //     continue;
+    //   }
+
+    //   specialNumbers.push({
+    //     x: getCoordsFromNumber(number).x,
+    //     y: getCoordsFromNumber(number).y,
+    //     number,
+    //     effect: Math.random() > 0.5 ? "good" : "bad",
+    //   });
+    // }
+
+    specialNumbers = specialBoxesWithCoords;
+
+    console.log("Special boxes generated: xxxxx", specialNumbers);
+
+    for (let i = 0; i < specialNumbers.length; i++) {
+      const number = specialNumbers[i].number;
+      const coords = getCoordsFromNumber(number);
+      specialNumbers[i].x = coords.x;
+      specialNumbers[i].y = coords.y;
+      specialNumbers[i].effect = specialNumbers[i].effect;
     }
 
     setSpecialBoxNumbers(specialNumbers);
