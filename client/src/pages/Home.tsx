@@ -157,16 +157,14 @@ export default function Home() {
 
         // setCustomLoading(true); // Set custom loading state to true
 
-        setTimeout(() => {
-          // setCustomLoading(false); // Turn off custom loading state after 15 seconds
-          setDiceValue(roll);
-          // setPlayers((prev) =>
-          //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
-          // );
+        // setCustomLoading(false); // Turn off custom loading state after 15 seconds
+        setDiceValue(roll);
+        // setPlayers((prev) =>
+        //   prev.map((p) => (p.id === player.id ? { ...p, position } : p))
+        // );
 
-          setPlayers(players);
-          handlePlayerMove(position, prevPosition, currentPlayer);
-        }, 5000);
+        setPlayers(players);
+        handlePlayerMove(position, prevPosition, currentPlayer);
 
         // setSpecialMessage("");
         // setCurrentPlayer()
@@ -185,9 +183,7 @@ export default function Home() {
           currentPlayer
         );
 
-        setTimeout(() => {
-          handlePlayerMove(position, prevPosition, currentPlayer);
-        }, 5000);
+        handlePlayerMove(position, prevPosition, currentPlayer);
       }
     );
 
@@ -208,17 +204,14 @@ export default function Home() {
       //   setModal(true);
       // }
 
-      setTimeout(() => {
-        setModelOpenForPlayer(player.id);
-        setSpecialMessage(message);
-      }, 1000);
+      setModelOpenForPlayer(player.id);
+      setSpecialMessage(message);
     });
 
     socket.on("updatePlayerArray", ({ players }) => {
       console.log("updatePlayerArray: ", players);
-      setTimeout(() => {
-        setPlayers(players);
-      }, 5000);
+
+      setPlayers(players);
     });
 
     socket.on("gameOver", ({ winner }) => {
@@ -416,12 +409,6 @@ export default function Home() {
 
   const rollDice = () => {
     if (winner || !gameStarted || !waitingForRoll) return;
-
-    setCustomLoading(true); // Set custom loading state to true
-
-    setTimeout(() => {
-      setCustomLoading(false); // Turn off custom loading state after 15 seconds
-    }, 5000);
 
     socket.emit("rollDice", {
       code: lobbyCode,
