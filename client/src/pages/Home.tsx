@@ -70,6 +70,8 @@ export default function Home() {
 
   const dragRef = useRef(null);
 
+  const [yourColor, setYourColor] = useState<"red" | "blue" | null>(null);
+
   useEffect(() => {
     console.log("Lobby Code", lobbyCode);
 
@@ -89,6 +91,7 @@ export default function Home() {
       console.log("Lobby created:", code);
       setGameJoinLoading(true);
       generateSpecialBoxes();
+      setYourColor(player.color);
 
       console.log("Player created:", player, player.id, player.color);
       setYourId(player.id);
@@ -938,6 +941,20 @@ export default function Home() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
             <div className="text-center">
+              {yourColor === "red" ? (
+                <p>
+                  You are <span className="text-red-700 font-bold">Red</span>
+                </p>
+              ) : (
+                <p>
+                  You are <span className="text-blue-500 font-bold">Blue</span>
+                </p>
+              )}
+              <br />
+
+              <p className="text-sm text-gray-700">
+                {yourTurn ? "  Turn" : "Opponent's Turn"}
+              </p>
               <p
                 className={`text-lg font-bold ${
                   currentPlayer === "red" ? "text-red-700" : "text-blue-500"
@@ -946,7 +963,6 @@ export default function Home() {
                 {currentPlayer.slice(0, 1).toUpperCase() +
                   currentPlayer.slice(1)}{" "}
               </p>
-              <p className="text-sm text-gray-700">It's your turn to play</p>
             </div>
 
             <div className="flex flex-col items-center">
