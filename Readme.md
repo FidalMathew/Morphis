@@ -94,6 +94,17 @@ npm install
 npm run dev
 ```
 
+### Screenshots
+
+<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+  <img width="100%" src="https://github.com/user-attachments/assets/9d8d71b9-b227-4478-bcc7-dd7cfc648492" />
+  <img width="100%" src="https://github.com/user-attachments/assets/471b8839-4ca2-478b-be56-879d1d4db979" />
+  <img width="100%" src="https://github.com/user-attachments/assets/2e407a6c-dec0-45f5-a5d7-200851c44db4" />
+  <img width="100%" src="https://github.com/user-attachments/assets/983f1295-6bbc-422a-ad80-f4faf6d446c2" />
+</div>
+
+
+
 ## 💡 Why Use Verifiable Randomness?
 
 Centralized randomness is often **opaque** and **untrustworthy**. By using **Randamu VRF**, Morphis ensures:
