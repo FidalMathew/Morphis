@@ -141,7 +141,9 @@ io.on("connection", (socket) => {
 
         if (lobby.players.length === 2) {
 
-            let value = await readRandomness();
+            try {
+
+                let value = await readRandomness();
             value = value.toString();
             
             const labels = ["Swap", "+5", "Extra Roll", "-5"];
@@ -182,15 +184,20 @@ io.on("connection", (socket) => {
             });
             
 
-
-
-
             lobby.started = true;
             io.to(code).emit("gameStart", {
                 turn: lobby.players[lobby.currentTurn].id,
                 players: lobby.players,
                 specialBoxes: ans,
             });
+                
+            } catch (error) {
+                
+                console.error("Error fetching randomness:", error);
+                socket.emit("error", "Error fetching randomness");
+            }
+
+            
         }
     });
 

@@ -620,119 +620,123 @@ export default function Home() {
 
   if (!lobbyJoined) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4">
-        <div className="w-full max-w-md">
-          <div className="flex flex-col items-center mb-8">
-            <div className="flex items-center gap-2 mb-2">
-              <Dices className="h-8 w-8 text-emerald-600" />
-              <h1 className="text-3xl font-bold text-slate-800">Morphis</h1>
-            </div>
-            <p className="text-slate-600">
-              The strategic board game of transformation
-            </p>
-          </div>
-
-          {/* {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )} */}
-
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Welcome to Morphis</CardTitle>
-              <CardDescription>
-                Enter your name to create or join a game
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Your Name
-                </label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your name"
-                  className="w-full"
-                />
+      <div className="flex min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+        {/* Content section - takes 3/4 of the screen */}
+        <div className="w-3/4 flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <div className="flex flex-col items-center mb-8">
+              <div className="flex items-center gap-2 mb-2">
+                <Dices className="h-8 w-8 text-emerald-600" />
+                <h1 className="text-3xl font-bold text-slate-800">Morphis</h1>
               </div>
-
-              <Tabs defaultValue="create" className="w-full mt-6">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="create">Create Room</TabsTrigger>
-                  <TabsTrigger value="join">Join Room</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="create" className="mt-4">
-                  <p className="text-sm text-slate-500 mb-4">
-                    Create a new game room and invite friends to join you
-                  </p>
-                  {lobbyCode && (
-                    <p className="text-center font-semibold text-3xl py-5">
-                      {lobbyCode}
-                    </p>
-                  )}
-                  {gameJoinLoading ? (
-                    <Button
-                      onClick={createLobby}
-                      className="w-full bg-emerald-400"
-                    >
-                      <Loader2 className="animate-spin" />
-                      Please wait
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={createLobby}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700"
-                    >
-                      Create New Room
-                    </Button>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="join" className="mt-4">
-                  <div className="space-y-4">
-                    <div>
-                      <label
-                        htmlFor="roomCode"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        Room Code
-                      </label>
-                      <Input
-                        id="roomCode"
-                        type="text"
-                        value={joiningCode}
-                        onChange={(e) => setJoiningCode(e.target.value)}
-                        placeholder="Enter room code"
-                        className="w-full"
-                      />
-                    </div>
-                    <Button
-                      onClick={() => {
-                        if (!name.trim()) return alert("Enter a name");
-                        socket.emit("joinLobby", { code: joiningCode, name });
-                      }}
-                      className="w-full"
-                    >
-                      Join Room
-                    </Button>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-            {/* <CardFooter className="flex justify-center border-t pt-4">
-              <p className="text-xs text-slate-500">
-                © {new Date().getFullYear()} Morphis Game
+              <p className="text-slate-600">
+                The strategic board game of transformation
               </p>
-            </CardFooter> */}
-          </Card>
+            </div>
+
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>Welcome to Morphis</CardTitle>
+                <CardDescription>
+                  Enter your name to create or join a game
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Your Name
+                  </label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your name"
+                    className="w-full"
+                  />
+                </div>
+
+                <Tabs defaultValue="create" className="w-full mt-6">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="create">Create Room</TabsTrigger>
+                    <TabsTrigger value="join">Join Room</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="create" className="mt-4">
+                    <p className="text-sm text-slate-500 mb-4">
+                      Create a new game room and invite friends to join you
+                    </p>
+                    {lobbyCode && (
+                      <p className="text-center font-semibold text-3xl py-5">
+                        {lobbyCode}
+                      </p>
+                    )}
+                    {gameJoinLoading ? (
+                      <Button
+                        onClick={createLobby}
+                        className="w-full bg-emerald-400"
+                      >
+                        <Loader2 className="animate-spin mr-2" />
+                        Please wait
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={createLobby}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        Create New Room
+                      </Button>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="join" className="mt-4">
+                    <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="roomCode"
+                          className="block text-sm font-medium mb-1"
+                        >
+                          Room Code
+                        </label>
+                        <Input
+                          id="roomCode"
+                          type="text"
+                          value={joiningCode}
+                          onChange={(e) => setJoiningCode(e.target.value)}
+                          placeholder="Enter room code"
+                          className="w-full"
+                        />
+                      </div>
+                      <Button
+                        onClick={() => {
+                          if (!name.trim()) return alert("Enter a name");
+                          socket.emit("joinLobby", { code: joiningCode, name });
+                        }}
+                        className="w-full"
+                      >
+                        Join Room
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Image section - takes 1/4 of the screen */}
+        <div
+          className="w-1/4 h-screen flex items-center justify-center "
+          style={{ backgroundColor: "#009966" }}
+        >
+          <img
+            src="/banner.png"
+            alt="Morphis Logo"
+            className="w-full h-auto object-contain"
+          />
         </div>
       </div>
     );
@@ -748,20 +752,24 @@ export default function Home() {
   };
 
   return (
-    <div className="flex justify-center items-center p-4 h-screen w-full">
-      {/* <Button
+    <div className=" bg-green-50">
+      <div className="text-4xl font-bold text-center pt-4 text-green-900">
+        Morphis
+      </div>
+      <div className="flex justify-center items-center h-screen w-full">
+        {/* <Button
         // onClick={startGame}
         className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
       >
         Start Game
       </Button> */}
-      <div></div>
-      <div className="mb-4 flex flex-col flex-wrap gap-4">
-        {!gameStarted ? (
-          <></>
-        ) : (
-          <>
-            {/* <div className="px-4 py-2 bg-gray-100 rounded flex items-center gap-2">
+        <div></div>
+        <div className="mb-4 flex flex-col flex-wrap gap-4">
+          {!gameStarted ? (
+            <></>
+          ) : (
+            <>
+              {/* <div className="px-4 py-2 bg-gray-100 rounded flex items-center gap-2">
               <div
                 className={`w-4 h-4 rounded-full ${
                   currentPlayer === "red" ? "bg-red-300" : "bg-blue-300"
@@ -770,7 +778,7 @@ export default function Home() {
               <span>Current: {currentPlayer === "red" ? "Pink" : "Blue"}</span>
             </div> */}
 
-            {/* <div className="px-4 py-2 bg-gray-100 rounded flex items-center gap-2">
+              {/* <div className="px-4 py-2 bg-gray-100 rounded flex items-center gap-2">
               <span>Pink: {playerNumbers.red}</span>
             </div>
 
@@ -778,7 +786,7 @@ export default function Home() {
               <span>Blue: {playerNumbers.blue}</span>
             </div> */}
 
-            {/* <Button
+              {/* <Button
               onClick={() => {
                 console.log(
                   "dsaassddas ",
@@ -797,256 +805,257 @@ export default function Home() {
 
             <Button onClick={handleMove}> Move</Button> */}
 
-            {validMoves.length > 0 && (
-              <div className="px-4 py-2 bg-yellow-100 rounded">
-                Drag {currentPlayer === "red" ? "Pink" : "Blue"} to square{" "}
-                {validMoves[0]}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {winner && (
-        <div className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded text-center">
-          <p className="text-lg font-bold">
-            {winner === "red" ? "Pink" : "Blue"} player wins!
-          </p>
-          <Button
-            // onClick={startGame}
-            className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            Play Again
-          </Button>
+              {validMoves.length > 0 && (
+                <div className="px-4 py-2 bg-yellow-100 rounded">
+                  Drag {currentPlayer === "red" ? "Pink" : "Blue"} to square{" "}
+                  {validMoves[0]}
+                </div>
+              )}
+            </>
+          )}
         </div>
-      )}
 
-      <div className="border-4 border-orange-400 grid grid-cols-10 place-items-center aspect-square h-3/4">
-        {[...Array(10)].map((_, x) =>
-          [...Array(10)].map((_, y) => {
-            const number = getNumberFromCoords(x, y);
-            const isStart = number === 1;
-            const isEnd = number === 100;
-            const isSpecialBox = specialBoxes.some(
-              (box) => box.x === x && box.y === y
-            );
-            const redPlayerHere =
-              playerPositions.red.x === x && playerPositions.red.y === y;
-            const bluePlayerHere =
-              playerPositions.blue.x === x && playerPositions.blue.y === y;
-            const isValidMove = validMoves.includes(number);
-            const showTooltipHere =
-              showTooltip &&
-              isSpecialBox &&
-              specialBoxes.some(
-                (box) =>
-                  box.x === x &&
-                  box.y === y &&
-                  tooltipPosition.number === getNumberFromCoords(x, y)
+        {winner && (
+          <div className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded text-center">
+            <p className="text-lg font-bold">
+              {winner === "red" ? "Pink" : "Blue"} player wins!
+            </p>
+            <Button
+              // onClick={startGame}
+              className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              Play Again
+            </Button>
+          </div>
+        )}
+
+        <div className="border-4 border-orange-400 grid grid-cols-10 place-items-center aspect-square h-3/4">
+          {[...Array(10)].map((_, x) =>
+            [...Array(10)].map((_, y) => {
+              const number = getNumberFromCoords(x, y);
+              const isStart = number === 1;
+              const isEnd = number === 100;
+              const isSpecialBox = specialBoxes.some(
+                (box) => box.x === x && box.y === y
               );
+              const redPlayerHere =
+                playerPositions.red.x === x && playerPositions.red.y === y;
+              const bluePlayerHere =
+                playerPositions.blue.x === x && playerPositions.blue.y === y;
+              const isValidMove = validMoves.includes(number);
+              const showTooltipHere =
+                showTooltip &&
+                isSpecialBox &&
+                specialBoxes.some(
+                  (box) =>
+                    box.x === x &&
+                    box.y === y &&
+                    tooltipPosition.number === getNumberFromCoords(x, y)
+                );
 
-            return (
-              <div
-                key={`${x}-${y}`}
-                className={`relative w-full h-full ${
-                  playerPositions.red.x === playerPositions.blue.x &&
-                  playerPositions.red.y === playerPositions.blue.y
-                    ? ""
-                    : "flex items-center justify-center"
-                }
+              return (
+                <div
+                  key={`${x}-${y}`}
+                  className={`relative w-full h-full ${
+                    playerPositions.red.x === playerPositions.blue.x &&
+                    playerPositions.red.y === playerPositions.blue.y
+                      ? ""
+                      : "flex items-center justify-center"
+                  }
                 ${isSpecialBox ? "bg-purple-200" : ""}
                 ${!isSpecialBox && isEnd ? "bg-yellow-100" : ""}
                 ${!isSpecialBox && isStart ? "bg-green-100" : ""}
                 ${!isSpecialBox && (x + y) % 2 === 0 ? "bg-white" : ""}
-                ${!isSpecialBox && (x + y) % 2 !== 0 ? "bg-orange-200" : ""}
+                ${!isSpecialBox && (x + y) % 2 !== 0 ? "bg-green-200" : ""}
                 ${
                   isValidMove
                     ? "z-[100] border-2 border-black cursor-pointer"
                     : ""
                 }
               `}
-                // onDragOver={(e) => handleDragOver(e, number)}
-                // onDrop={(e) => handleDrop(e, number)}
-                // onTouchEnd={(e) => handleTouchEnd(e, number)}
-                onClick={() => {
-                  // handleDestinationClick(number);
-                }}
-              >
-                <div className="grid place-content-center h-full w-full text-lg font-semibold text-gray-700 p-1">
-                  {/* {x}, {y} */}
-                  {number}
-                </div>
-
-                {redPlayerHere && (
-                  <div
-                    className={`w-6 h-6 rounded-full bg-red-300 z-10 absolute transition-all duration-250 ease-in-out ${
-                      redPlayerHere && bluePlayerHere
-                        ? "top-0 left-0"
-                        : "top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                    } ${
-                      currentPlayer === "red" &&
-                      validMoves.length > 0 &&
-                      !isAnimating
-                        ? "cursor-move"
-                        : ""
-                    }`}
-                    draggable={
-                      currentPlayer === "red" &&
-                      validMoves.length > 0 &&
-                      !isAnimating
-                    }
-                    // onDragStart={(e) =>
-                    //   !isAnimating && handleDragStart(e, "red")
-                    // }
-                    // onTouchStart={() => !isAnimating && handleTouchStart("red")}
-                    ref={currentPlayer === "red" ? dragRef : null}
-                  ></div>
-                )}
-
-                {bluePlayerHere && (
-                  <div
-                    className={`w-6 h-6 rounded-full bg-blue-300 z-10 absolute transition-all duration-250 ease-in-out ${
-                      redPlayerHere && bluePlayerHere
-                        ? "top-1/2 right-0"
-                        : "top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                    } ${
-                      currentPlayer === "blue" &&
-                      validMoves.length > 0 &&
-                      !isAnimating
-                        ? "cursor-move"
-                        : ""
-                    }`}
-                    draggable={
-                      currentPlayer === "blue" &&
-                      validMoves.length > 0 &&
-                      !isAnimating
-                    }
-                    // onDragStart={(e) =>
-                    //   !isAnimating && handleDragStart(e, "blue")
-                    // }
-                    // onTouchStart={() =>
-                    //   !isAnimating && handleTouchStart("blue")
-                    // }
-                    ref={currentPlayer === "blue" ? dragRef : null}
-                  ></div>
-                )}
-
-                {showTooltipHere && (
-                  <div
-                    className="absolute z-20 bg-white border border-gray-300 rounded p-2 shadow-lg cursor-pointer"
-                    onClick={() => handleTooltipClick()}
-                  >
-                    Click to see what happens
+                  // onDragOver={(e) => handleDragOver(e, number)}
+                  // onDrop={(e) => handleDrop(e, number)}
+                  // onTouchEnd={(e) => handleTouchEnd(e, number)}
+                  onClick={() => {
+                    // handleDestinationClick(number);
+                  }}
+                >
+                  <div className="grid place-content-center h-full w-full text-lg font-semibold text-gray-700 p-1">
+                    {/* {x}, {y} */}
+                    {number}
                   </div>
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
 
-      <div className="flex flex-col gap-4 p-4 w-[300px]">
-        {/* Advantages Section */}
-        <Card className="w-full bg-green-50 shadow-sm rounded-2xl">
-          <CardHeader className="border-b border-green-200">
-            <CardTitle className="text-2xl font-semibold text-center text-green-900">
-              🧩 Power Ups
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="pt-4">
-            <div className="grid gap-4">
-              {players
-                .find((player) => player.id === yourId)
-                .powerUps.map(
-                  (
-                    powerUp: { name: string; timeLeft: number },
-                    index: number
-                  ) => (
+                  {redPlayerHere && (
                     <div
-                      key={index}
-                      className="flex flex-col justify-center items-center gap-2 bg-white rounded-xl p-3 border border-green-100"
+                      className={`w-6 h-6 rounded-full bg-red-300 z-10 absolute transition-all duration-250 ease-in-out ${
+                        redPlayerHere && bluePlayerHere
+                          ? "top-0 left-0"
+                          : "top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                      } ${
+                        currentPlayer === "red" &&
+                        validMoves.length > 0 &&
+                        !isAnimating
+                          ? "cursor-move"
+                          : ""
+                      }`}
+                      draggable={
+                        currentPlayer === "red" &&
+                        validMoves.length > 0 &&
+                        !isAnimating
+                      }
+                      // onDragStart={(e) =>
+                      //   !isAnimating && handleDragStart(e, "red")
+                      // }
+                      // onTouchStart={() => !isAnimating && handleTouchStart("red")}
+                      ref={currentPlayer === "red" ? dragRef : null}
+                    ></div>
+                  )}
+
+                  {bluePlayerHere && (
+                    <div
+                      className={`w-6 h-6 rounded-full bg-blue-300 z-10 absolute transition-all duration-250 ease-in-out ${
+                        redPlayerHere && bluePlayerHere
+                          ? "top-1/2 right-0"
+                          : "top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                      } ${
+                        currentPlayer === "blue" &&
+                        validMoves.length > 0 &&
+                        !isAnimating
+                          ? "cursor-move"
+                          : ""
+                      }`}
+                      draggable={
+                        currentPlayer === "blue" &&
+                        validMoves.length > 0 &&
+                        !isAnimating
+                      }
+                      // onDragStart={(e) =>
+                      //   !isAnimating && handleDragStart(e, "blue")
+                      // }
+                      // onTouchStart={() =>
+                      //   !isAnimating && handleTouchStart("blue")
+                      // }
+                      ref={currentPlayer === "blue" ? dragRef : null}
+                    ></div>
+                  )}
+
+                  {showTooltipHere && (
+                    <div
+                      className="absolute z-20 bg-white border border-gray-300 rounded p-2 shadow-lg cursor-pointer"
+                      onClick={() => handleTooltipClick()}
                     >
-                      <Badge
-                        variant="outline"
-                        className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs cursor-pointer"
-                        onClick={() => usePowerUp(powerUp.name)}
-                      >
-                        {powerUp.name}
-                      </Badge>
-                      <span className="text-sm text-gray-700">
-                        Turns till it exhaust: {powerUp.timeLeft}
-                      </span>
+                      Click to see what happens
                     </div>
-                  )
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="flex flex-col gap-4 p-4 w-[300px]">
+          {/* Advantages Section */}
+          <Card className="w-full bg-green-100 shadow-sm rounded-2xl">
+            <CardHeader className="border-b border-green-200">
+              <CardTitle className="text-2xl font-semibold text-center text-green-900">
+                🧩 Power Ups
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="pt-4">
+              <div className="grid gap-4">
+                {players
+                  .find((player) => player.id === yourId)
+                  .powerUps.map(
+                    (
+                      powerUp: { name: string; timeLeft: number },
+                      index: number
+                    ) => (
+                      <div
+                        key={index}
+                        className="flex flex-col justify-center items-center gap-2 bg-white rounded-xl p-3 border border-green-100"
+                      >
+                        <Badge
+                          variant="outline"
+                          className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs cursor-pointer"
+                          onClick={() => usePowerUp(powerUp.name)}
+                        >
+                          {powerUp.name}
+                        </Badge>
+                        <span className="text-sm text-gray-700">
+                          Turns till it exhaust: {powerUp.timeLeft}
+                        </span>
+                      </div>
+                    )
+                  )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Current Player and Dice Section */}
+          <Card className="w-full max-w-lg bg-amber-100 shadow-md rounded-2xl">
+            <CardHeader className="pb-1 border-b border-amber-200">
+              <CardTitle className="text-2xl font-semibold text-center text-amber-900">
+                🎲 Current Turn
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-4">
+              <div className="text-center">
+                {yourColor === "red" ? (
+                  <p>
+                    You are <span className="text-red-700 font-bold">Red</span>
+                  </p>
+                ) : (
+                  <p>
+                    You are{" "}
+                    <span className="text-blue-500 font-bold">Blue</span>
+                  </p>
                 )}
-            </div>
-          </CardContent>
-        </Card>
+                <br />
 
-        {/* Current Player and Dice Section */}
-        <Card className="w-full max-w-lg bg-amber-100 shadow-md rounded-2xl">
-          <CardHeader className="pb-1 border-b border-amber-200">
-            <CardTitle className="text-2xl font-semibold text-center text-amber-900">
-              🎲 Current Turn
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <div className="text-center">
-              {yourColor === "red" ? (
-                <p>
-                  You are <span className="text-red-700 font-bold">Red</span>
+                <p className="text-sm text-gray-700">
+                  {yourTurn ? "  Turn" : "Opponent's Turn"}
                 </p>
-              ) : (
-                <p>
-                  You are <span className="text-blue-500 font-bold">Blue</span>
+                <p
+                  className={`text-lg font-bold ${
+                    currentPlayer === "red" ? "text-red-700" : "text-blue-500"
+                  }`}
+                >
+                  {currentPlayer.slice(0, 1).toUpperCase() +
+                    currentPlayer.slice(1)}{" "}
                 </p>
-              )}
-              <br />
+              </div>
 
-              <p className="text-sm text-gray-700">
-                {yourTurn ? "  Turn" : "Opponent's Turn"}
-              </p>
-              <p
-                className={`text-lg font-bold ${
-                  currentPlayer === "red" ? "text-red-700" : "text-blue-500"
-                }`}
-              >
-                {currentPlayer.slice(0, 1).toUpperCase() +
-                  currentPlayer.slice(1)}{" "}
-              </p>
-            </div>
+              <div className="flex flex-col items-center">
+                <span className="text-sm font-medium text-amber-700 mb-1">
+                  Dice Value
+                </span>
+                {/* {"renderDice(diceValue)"} */}
+                {diceValue && diceValue}
+                <Button
+                  onClick={rollDice}
+                  variant={"outline"}
+                  disabled={!yourTurn || winner !== null}
+                  className={`px-4 py-2 text-black ${
+                    yourTurn && !winner ? "" : "bg-gray-300 "
+                  } text-white rounded`}
+                  style={{
+                    color: "black",
+                  }}
+                >
+                  Roll Dice
+                </Button>
 
-            <div className="flex flex-col items-center">
-              <span className="text-sm font-medium text-amber-700 mb-1">
-                Dice Value
-              </span>
-              {/* {"renderDice(diceValue)"} */}
-              {diceValue && diceValue}
-              <Button
-                onClick={rollDice}
-                variant={"outline"}
-                disabled={!yourTurn || winner !== null}
-                className={`px-4 py-2 text-black ${
-                  yourTurn && !winner ? "" : "bg-gray-300 "
-                } text-white rounded`}
-                style={{
-                  color: "black",
-                }}
-              >
-                Roll Dice
-              </Button>
+                {/* <Button onClick={() => console.log("modal value: ", modal)}>
+                  {" "}
+                  Modal value
+                </Button> */}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-              <Button onClick={() => console.log("modal value: ", modal)}>
-                {" "}
-                Modal value
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* <div className="mt-4 text-sm text-gray-600">
+        {/* <div className="mt-4 text-sm text-gray-600">
         <p>Rules:</p>
         <ul className="list-disc pl-5">
           <li>Roll the dice and drag your piece to the destination.</li>
@@ -1056,7 +1065,7 @@ export default function Home() {
         </ul>
       </div> */}
 
-      {/* {showModal && selectedSpecialBox && (
+        {/* {showModal && selectedSpecialBox && (
         <Dialog onOpenChange={setShowModal} open={showModal}>
           <DialogContent className="bg-white">
             <DialogHeader>
@@ -1093,18 +1102,18 @@ export default function Home() {
         </Dialog>
       )} */}
 
-      {specialMessage !== "" && !isAnimating && !yourTurn && (
-        <Dialog
-          open={modal}
-          onOpenChange={(isOpen) => {
-            setModal(isOpen); // Update the modal state based on the dialog's open state
-          }}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>🎉 You landed into a special box</DialogTitle>
-              <DialogDescription>
-                {/* {players
+        {specialMessage !== "" && !isAnimating && !yourTurn && (
+          <Dialog
+            open={modal}
+            onOpenChange={(isOpen) => {
+              setModal(isOpen); // Update the modal state based on the dialog's open state
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>🎉 You landed into a special box</DialogTitle>
+                <DialogDescription>
+                  {/* {players
                   .find((player) => player.id === yourId)
                   .powerUps.map(
                     (
@@ -1122,14 +1131,15 @@ export default function Home() {
                     )
                   )}
                    */}
-                <p className="py-5 text-center font-semibold text-xl text-black">
-                  {specialMessage}
-                </p>
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-      )}
+                  <p className="py-5 text-center font-semibold text-xl text-black">
+                    {specialMessage}
+                  </p>
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
     </div>
   );
 }
